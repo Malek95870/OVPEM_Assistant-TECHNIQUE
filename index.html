@@ -25,7 +25,7 @@
 })();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Guide Diagnostic SAV/Magasins – v7 2026</title>
+<title>OVPEM V3.04 – Guide Diagnostic SAV/Magasins</title>
 <style>
 /* ═══════════════════════════════════════════════════════════
    VARIABLES & BASE
@@ -3490,7 +3490,7 @@ body.admin-edit-mode [data-editable][contenteditable="true"]{
 .ovd-context-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:12px;}
 .ovd-input-bar{display:flex;gap:10px;margin-top:14px;align-items:center;flex-wrap:wrap;}
 .ovd-mode-toggle{display:inline-flex;background:var(--surface2);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
-.ovd-mode-toggle button{background:none;border:none;color:var(--text3);padding:6px 13px;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit;transition:.15s;letter-spacing:.02em;}
+.ovd-mode-toggle button{background:none;border:none;color:var(--text2);padding:6px 13px;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit;transition:.15s;letter-spacing:.02em;}
 .ovd-mode-toggle button.on{background:#6366f1;color:#fff;}
 .ovd-mode-toggle button:hover:not(.on){background:var(--surface);color:var(--text);}
 
@@ -4328,10 +4328,10 @@ body.light .cop-btn-2l .cop-btn-sub{color:#fff;}
     <button class="gate-btn" onclick="gateSubmit()">Entrer&nbsp;→</button>
     <div class="gate-err" id="gateErr">Code non reconnu. Vérifiez votre code d'accès.</div>
     <div class="gate-chips">
-      <div class="gate-chip"><div class="gc-ico">🏪</div><div class="gc-t">Magasin / Hotline</div><div class="gc-s">Guidage rapide</div></div>
+      <div class="gate-chip"><div class="gc-ico">🏪</div><div class="gc-t">Magasin / Hotline / RCD</div><div class="gc-s">Guidage rapide IA</div></div>
       <div class="gate-chip"><div class="gc-ico">🔧</div><div class="gc-t">Atelier / Technicien</div><div class="gc-s">Accès complet</div></div>
     </div>
-    <div class="gate-foot">Outil Vérification PEM<br>🔒 Programme protégé · v2.89</div>
+    <div class="gate-foot">Outil Vérification PEM<br>🔒 Programme protégé · <span id="gateVersion">v3.04</span></div>
   </div>
 </div>
 
@@ -4396,7 +4396,7 @@ body.light .cop-btn-2l .cop-btn-sub{color:#fff;}
       <span style="font-size:13px;">⚙️</span>Paramètres Admin <span class="adm-lock-state" style="font-size:9px;opacity:.85;margin-left:2px;">🔒</span>
     </button>
     <div style="text-align:center;margin-top:8px;">
-      <span class="ovpem-version-badge" id="ovpemVersionBadge" title="Version d'OVPEM en cours d'utilisation. Cliquer pour vérifier les mises à jour.">v2.90</span>
+      <span class="ovpem-version-badge" id="ovpemVersionBadge" title="Version d'OVPEM en cours d'utilisation. Cliquer pour vérifier les mises à jour.">v3.04</span>
     </div>
   </div>
   <div class="sidebar-footer">SAV/Magasins – Usage interne</div>
@@ -4407,6 +4407,8 @@ body.light .cop-btn-2l .cop-btn-sub{color:#fff;}
   <!-- TOPBAR -->
   <div class="topbar">
     <button class="mob-nav-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰ Menu</button>
+      <!-- V3.04 — retour au tableau de bord (profil Magasin / Hotline / RCD, hors accueil) -->
+      <button class="btn" id="accueilRetour" onclick="ovpemAccueil.retour()" title="Revenir au tableau de bord d'accueil">🏠 Tableau de bord</button>
     <div class="topbar-search" style="position:relative;">
       <span class="si">🔍</span>
       <input type="search" id="globalSearch" placeholder="Recherche globale : code, symptôme, marque…" oninput="globalSearchFn(this.value)" autocomplete="off">
@@ -4448,6 +4450,9 @@ body.light .cop-btn-2l .cop-btn-sub{color:#fff;}
     <h2>Outil Vérification - PEM (SAV / Magasins)</h2>
     <p>Multimarque — Guide novice &amp; expert. Trouvez la panne, la solution et la pièce en quelques secondes.</p>
   </div>
+
+  <!-- V3.03 — Accueil : tableau de bord classé en thèmes (rendu par ovpemAccueil) -->
+  <div class="acc-board" id="accueilBoard" data-profil=""></div>
 
   <div class="guide-selector">
     <div class="guide-card" onclick="showPage('wizard')">
@@ -11703,8 +11708,10 @@ ovpemMigratePasswordsToHash();
    - Configuration de l'URL dans le panneau admin
    - Cache busting pour forcer le refresh
    ═══════════════════════════════════════════════════════════ */
-const OVPEM_VERSION = "3.00";
-const OVPEM_BUILD_DATE = "2026-06-26";
+const OVPEM_VERSION = "3.04";
+const OVPEM_BUILD_DATE = "2026-09-15";
+/* V3.01 — la page de login affiche la version depuis la constante (plus de libellé figé) */
+try{ (function(){ var gv = document.getElementById('gateVersion'); if(gv) gv.textContent = 'v' + OVPEM_VERSION; })(); }catch(e){}
 
 // Stockage configuration
 const VERSION_URL_LS = 'ovpem_version_check_url';
@@ -12507,6 +12514,10 @@ function ovpemApplyRemotePayload(remote){
       summary.applied_edits = true;
     } catch(e){ console.warn('[OVPEM Sync] Inline edits :', e); }
   }
+  // V3.02 — personnalisations admin datées (fichiers OneDrive)
+  if(remote.extras && typeof window.odAppliquerExtras === 'function'){
+    try { summary.applied_extras = window.odAppliquerExtras(remote.extras); } catch(e){ console.warn('[OVPEM Sync] Personnalisations :', e); }
+  }
   // Stats : non appliquées en local (chaque poste garde ses propres compteurs)
   return { ok:true, summary:summary };
 }
@@ -12686,6 +12697,7 @@ function ovpemGetActiveSyncProvider(){
   const prov = ovpemGetSyncProvider();
   if(prov === 'jsonbin') return SyncProviderJSONBin;
   if(prov === 'gas')     return SyncProviderGAS;
+  if(prov === 'onedrive' && window.SyncProviderOneDrive) return window.SyncProviderOneDrive; /* V3.02 */
   return null;
 }
 
@@ -12785,7 +12797,8 @@ async function _ovpemSyncFullCycleDo(provider){
   // V2.40 — Backup avant pull
   _ovpemBackupBeforePull();
   const pullRes = await provider.pull();
-  if(pullRes.ok && pullRes.data){ ovpemApplyRemotePayload(pullRes.data); }
+  let _pullSummary = null; /* V3.02 — bilan de la récupération affiché après un cycle complet */
+  if(pullRes.ok && pullRes.data){ _pullSummary = (ovpemApplyRemotePayload(pullRes.data) || {}).summary || null; }
   else if(!pullRes.ok && pullRes.error){
     if(pullRes.error.indexOf('manquant') === -1 && pullRes.error.indexOf('Push d') === -1){
       console.warn('[OVPEM Sync] Pull échec, push quand même :', pullRes.error);
@@ -12804,6 +12817,7 @@ async function _ovpemSyncFullCycleDo(provider){
     action:'sync', ok: !!pushRes.ok, error: pushRes.error || null,
     items: { mag: (payload.contributions_magasin||[]).length, atel: (payload.contributions_atelier||[]).length }
   });
+  if(pushRes && pushRes.ok && _pullSummary) pushRes.summary = _pullSummary;
   return pushRes;
 }
 
@@ -12816,7 +12830,8 @@ function _ovpemBackupBeforePull(){
       atel: localStorage.getItem('ovaContribAtelier_v1'),
       brands: localStorage.getItem('ovaContribCustomBrands_v1'),
       hiddenBrands: localStorage.getItem('ovpem_hidden_brands'),
-      inlineEdits: localStorage.getItem(typeof LS_INLINE_EDITS !== 'undefined' ? LS_INLINE_EDITS : 'ovpem_inline_edits_v1')
+      inlineEdits: localStorage.getItem(typeof LS_INLINE_EDITS !== 'undefined' ? LS_INLINE_EDITS : 'ovpem_inline_edits_v1'),
+      extras: (typeof window.odSauvegardeExtras === 'function') ? window.odSauvegardeExtras() : null
     };
     localStorage.setItem('ovpem_sync_pre_pull_backup', JSON.stringify(backup));
   } catch(e){}
@@ -13147,7 +13162,8 @@ function astSyncRenderExclusions(){
     contributions_atelier:'astSyncExAtel',
     stats_usage:'astSyncExStats',
     referent_email:'astSyncExReferent',
-    inline_edits:'astSyncExInline'
+    inline_edits:'astSyncExInline',
+    custom_admin:'astSyncExCustomAdmin'
   };
   Object.keys(map).forEach(function(k){
     const el = document.getElementById(map[k]);
@@ -13160,7 +13176,8 @@ function astSyncToggleExclusion(key, checked){
     custom_brands:'Marques personnalisées', hidden_brands:'Marques masquées',
     contributions_magasin:'Contributions Magasin', contributions_atelier:'Contributions Atelier',
     stats_usage:'Statistiques d\'usage', referent_email:'Email référent & réglages',
-    inline_edits:'Modifications inline'
+    inline_edits:'Modifications inline',
+    custom_admin:'Personnalisations admin'
   };
   const lbl = labels[key] || key;
   if(typeof adminToast === 'function') adminToast(checked ? ('🚫 « ' + lbl + ' » exclu de la sync') : ('✓ « ' + lbl + ' » re-synchronisé'));
@@ -13187,6 +13204,10 @@ function astSyncUpdateProviderVisibility(prov){
   if(jb) jb.style.display = (prov === 'jsonbin') ? 'block' : 'none';
   if(gs) gs.style.display = (prov === 'gas') ? 'block' : 'none';
   if(ac) ac.style.display = (prov === 'none') ? 'none' : 'block';
+  /* V3.02 — OneDrive / SharePoint */
+  const od = document.getElementById('astSyncOneDriveCfg');
+  if(od) od.style.display = (prov === 'onedrive') ? 'block' : 'none';
+  if(prov === 'onedrive' && typeof window.odRafraichirEtat === 'function') window.odRafraichirEtat();
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -13490,6 +13511,7 @@ async function astSyncDoSync(mode){
       if(typeof res.summary.merged_atel === 'number') msg += '\n• Atelier : ' + res.summary.merged_atel + ' entrée(s)';
       if(res.summary.applied_settings) msg += '\n• Settings admin appliqués';
       if(res.summary.applied_edits) msg += '\n• Modifications inline appliquées';
+      if(res.summary.applied_extras) msg += '\n• Personnalisations admin appliquées : ' + res.summary.applied_extras;
     }
     alert(msg);
   } else {
@@ -17043,7 +17065,7 @@ window.addEventListener('DOMContentLoaded', () => {
         <div class="ast-dash-info">
           <div class="ast-dash-section-title">Informations système</div>
           <table class="ast-dash-info-table">
-            <tr><td>Version</td><td><b id="astDashVersionCell">OVPEM V2.30</b></td></tr>
+            <tr><td>Version</td><td><b id="astDashVersionCell">OVPEM V3.04</b></td></tr>
             <tr><td>Stockage local utilisé</td><td id="astDashStorageSize">— Ko</td></tr>
             <tr><td>Marques masquées</td><td id="astDashBrandsHidden">0</td></tr>
             <tr><td>Mots de passe par défaut</td><td id="astDashPwdStatus">—</td></tr>
@@ -17161,9 +17183,10 @@ window.addEventListener('DOMContentLoaded', () => {
       <div class="ast-pane" id="astPaneSync" style="display:none;">
         <div class="ast-intro">
           <b>🌐 Synchronisation cloud des données OVPEM.</b><br>
-          Partage les contributions, stats, paramètres admin et modifications inline entre plusieurs postes via un backend cloud. Deux providers au choix :
+          Partage les contributions, stats, paramètres admin et modifications inline entre plusieurs postes via un backend cloud. Trois providers au choix :
           <ul style="margin:4px 0 0 18px;">
-            <li><b>JSONBin.io</b> : zéro infrastructure, free tier 10 000 req/mois (recommandé pour démarrer).</li>
+            <li><b>OneDrive / SharePoint</b> : dossier partagé Fnac Darty, synchronisé sur chaque poste. Aucune clé, aucun service externe (recommandé).</li>
+            <li><b>JSONBin.io</b> : zéro infrastructure, free tier 10 000 req/mois.</li>
             <li><b>Google Apps Script</b> : si tu as déjà un projet GAS (comme SuiviEfficience). Données dans Google Sheets, illimité.</li>
           </ul>
         </div>
@@ -17189,6 +17212,13 @@ window.addEventListener('DOMContentLoaded', () => {
             <span class="adm-sync-radio-body">
               <b>Aucune synchronisation</b>
               <span class="adm-sync-radio-sub">Mode local uniquement (par défaut). Toutes les données restent dans ce navigateur.</span>
+            </span>
+          </label>
+          <label class="adm-sync-radio">
+            <input type="radio" name="syncProvider" value="onedrive" onchange="astSyncSaveProvider(this.value)">
+            <span class="adm-sync-radio-body">
+              <b>☁️ OneDrive / SharePoint</b>
+              <span class="adm-sync-radio-sub">Dossier partagé synchronisé sur chaque poste par OneDrive. Chaque poste y dépose son fichier et récupère ceux des autres. Aucune clé, aucun service externe.</span>
             </span>
           </label>
           <label class="adm-sync-radio">
@@ -17240,6 +17270,32 @@ window.addEventListener('DOMContentLoaded', () => {
               <button class="btn-contrib-cancel" onclick="astSyncTestConnection()">🔌 Tester connexion</button>
             </div>
           </div>
+        </div>
+
+        <!-- V3.02 — Config OneDrive / SharePoint -->
+        <div id="astSyncOneDriveCfg" style="display:none;margin-top:14px;padding:12px;background:var(--bg2);border-radius:8px;border:1px solid var(--border);">
+          <h5 style="font-size:12px;color:var(--text);margin:0 0 8px;letter-spacing:.05em;">☁️ Configuration OneDrive / SharePoint</h5>
+          <ol class="od-steps">
+            <li>Une seule fois : sur SharePoint ou Teams, créez un dossier partagé avec l'équipe, par exemple <b>OVPEM_Partage</b>.</li>
+            <li>Sur chaque poste : ouvrez ce dossier dans le navigateur et cliquez <b>Synchroniser</b> (ou <b>Ajouter un raccourci à Mon OneDrive</b>). Il apparaît dans l'Explorateur de fichiers, sous OneDrive.</li>
+            <li>Ici : <b>Choisir le dossier partagé</b>, sélectionnez ce dossier, puis <b>Synchroniser</b>. Pensez à nommer le poste (Identité de ce poste).</li>
+          </ol>
+          <div class="od-etat">Dossier : <b id="astOdNom">aucun</b> · Accès : <span id="astOdAcces" class="od-acces">—</span></div>
+          <div id="astOdNav" class="od-nav">Ce navigateur ne permet pas l'accès direct aux dossiers : utilisez Chrome ou Edge, ou l'export / import manuel ci-dessous.</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button class="btn-contrib-save" onclick="odChoisirDossier()">📁 Choisir le dossier partagé</button>
+            <button class="btn-contrib-cancel" onclick="odAutoriser()">🔓 Autoriser l'accès</button>
+            <button class="btn-contrib-cancel" onclick="astSyncTestConnection()">🔌 Tester le dossier</button>
+            <button class="btn-contrib-cancel" onclick="odOublier()">✕ Oublier le dossier</button>
+          </div>
+          <div class="od-manuel">
+            <b>Sans accès direct au dossier</b> (navigateur incompatible ou fonction bloquée sur le poste) : exportez le fichier de ce poste dans le dossier OneDrive, puis importez depuis ce dossier les fichiers des autres postes.
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">
+              <button class="btn-contrib-cancel" onclick="odExporterPoste()">⬇️ Exporter le fichier de ce poste</button>
+              <button class="btn-contrib-cancel" onclick="odImporterFichiers()">⬆️ Importer les fichiers des postes</button>
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--text2);margin-top:8px;line-height:1.5;">Chaque poste écrit son propre fichier <code>ovpem_poste_….json</code> : aucun poste n'écrase les données d'un autre. Contributions, statistiques, réglages, modifications et personnalisations admin sont récupérés depuis tous les postes.</div>
         </div>
 
         <!-- Actions sync -->
@@ -17308,6 +17364,7 @@ window.addEventListener('DOMContentLoaded', () => {
               <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;color:var(--text);"><input type="checkbox" id="astSyncExStats" onchange="astSyncToggleExclusion('stats_usage',this.checked)"> Statistiques d'usage</label>
               <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;color:var(--text);"><input type="checkbox" id="astSyncExReferent" onchange="astSyncToggleExclusion('referent_email',this.checked)"> Email référent &amp; réglages</label>
               <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;color:var(--text);"><input type="checkbox" id="astSyncExInline" onchange="astSyncToggleExclusion('inline_edits',this.checked)"> Modifications inline</label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;color:var(--text);"><input type="checkbox" id="astSyncExCustomAdmin" onchange="astSyncToggleExclusion('custom_admin',this.checked)"> Personnalisations admin (OneDrive)</label>
             </div>
             <div style="margin-top:12px;">
               <button class="btn-contrib-cancel" onclick="astSyncPurgeCustomBrands()" style="background:rgba(239,68,68,.15);color:#ef4444;padding:6px 12px;font-size:11.5px;">🧹 Purger les marques personnalisées (local)</button>
@@ -17429,7 +17486,7 @@ window.addEventListener('DOMContentLoaded', () => {
         <div class="ast-intro" style="margin-bottom:10px;">Codes saisis sur l'ecran de lancement — le code determine le profil ouvert. Modifiez-les ici, puis generez le fichier configure (onglet 💾 Sauvegarde) pour les deployer.</div>
         <div class="ast-row" style="align-items:stretch;flex-wrap:wrap;gap:8px;">
           <div style="flex:1;min-width:240px;">
-            <div style="font-size:12.5px;color:var(--text);font-weight:600;">🏪 Code Magasin / Hotline (novice)</div>
+            <div style="font-size:12.5px;color:var(--text);font-weight:600;">🏪 Code Magasin / Hotline / RCD – Guidage rapide IA (novice)</div>
             <div style="font-size:11px;color:var(--text3);margin-top:2px;">Ouvre l'interface simplifiee de guidage.</div>
             <input type="text" id="adminProfileNoviceCode" autocomplete="off" placeholder="ex : bezons" style="width:100%;margin-top:6px;padding:8px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12.5px;font-family:'DM Mono',monospace;">
           </div>
@@ -17580,7 +17637,7 @@ window.addEventListener('DOMContentLoaded', () => {
     </div>
     <div class="v28-foot">
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button class="v28-btn primary" id="statsPushBtn" onclick="statsPushToServer()" title="Envoie les statistiques sur le serveur de synchronisation déjà configuré (JSONBin.io ou Google Apps Script)">☁ Envoyer au serveur</button>
+        <button class="v28-btn primary" id="statsPushBtn" onclick="statsPushToServer()" title="Envoie les statistiques sur le serveur de synchronisation déjà configuré (OneDrive / SharePoint, JSONBin.io ou Google Apps Script)">☁ Envoyer au serveur</button>
         <button class="v28-btn" onclick="statsExportPDF()">📄 PDF</button>
         <button class="v28-btn" onclick="statsExport()">📥 JSON</button>
       </div>
@@ -18225,7 +18282,7 @@ const AI_SYSTEM_PROMPT =
    ─ Base technique métier injectée contextuellement dans le prompt système
    ─ Registre de ressources vérifiées, priorité Fnac Darty (zéro URL inventée)
    ─ Schémas techniques annotés (SVG interne) appelés par clé
-   ─ Réponse calibrée sur l'audience : Magasin / Hotline / Technicien
+   ─ Réponse calibrée sur l'audience : Magasin / Hotline / RCD / Technicien
    ══════════════════════════════════════════════════════════════════════════ */
 
 /* ─── 1. BASE TECHNIQUE MÉTIER ───────────────────────────────────────────
@@ -18750,6 +18807,20 @@ Formule les vérifications sous forme de questions FERMÉES à poser au client, 
 Précise ce que le client doit regarder ou entendre, et ce que sa réponse permet d'éliminer.
 Termine par la décision d'orientation : résolu au téléphone / dépôt magasin / intervention atelier.`
   },
+  rcd:{
+    lbl:'RCD',
+    hint:'Comptoir distant : solutions que le client applique au t\u00e9l\u00e9phone, pour \u00e9viter le d\u00e9p\u00f4t de l\u2019appareil en magasin.',
+    dir:`AUDIENCE = RCD, COMPTOIR DISTANT : conseiller au téléphone avec le client, sans l'appareil en main. Objectif : résoudre à distance et éviter le dépôt de l'appareil en magasin chaque fois que c'est possible.
+COMMENCE PAR CE QUI EST FAISABLE PAR LE CLIENT, TOUT DE SUITE, CHEZ LUI. Juste après la ligne NIVEAU, ajoute la section :
+📞 À FAIRE FAIRE AU CLIENT :
+1. [geste simple, sans outil ni démontage, rédigé comme une phrase à dire au client] → [ce qu'il doit voir ou entendre si c'est réglé]
+(3 à 6 gestes, du plus rapide et plus probable au moins probable : redémarrage, nettoyage d'un consommable, vérification dans l'application, Wi-Fi 2,4 GHz, mise à jour, réinitialisation, remise en place d'un élément.)
+Dans CAUSES POSSIBLES, formule chaque action pour qu'elle puisse être guidée au téléphone. Le TEST DISCRIMINANT doit pouvoir être réalisé par le client lui-même.
+Juste avant « ⚠️ Rappel », ajoute :
+✅ SI C'EST RÉSOLU : [phrase de conclusion à dire au client + consommable à commander si l'usure est en cause, pour éviter la récidive]
+🏪 SI CE N'EST PAS RÉSOLU : [orientation : dépôt magasin ou atelier, et ce que le client doit apporter : appareil, station ou base, accessoires, preuve d'achat]
+Ne demande jamais au client d'ouvrir l'appareil ni de manipuler la batterie. Vocabulaire du quotidien, phrases courtes à lire au client.`
+  },
   technicien:{
     lbl:'Technicien',
     hint:'Terminologie atelier, points de mesure, valeurs attendues et référence exacte des pièces.',
@@ -18817,6 +18888,25 @@ function _kbPick(txt){
   return { fam: (isLaveur ? 'laveur' : (isBalai ? 'balai' : 'robot')), sections: out.slice(0, 4) };
 }
 
+/* V3.01 — Procédure application : consigne ajoutée seulement pour une demande « application » */
+function _ovnContexteConv(){
+  let c = '';
+  try{
+    aiChatHistory.forEach(function(m){ if(m.role === 'user') c += ' ' + m.text; });
+    const chip = document.getElementById('aiContextChip');
+    if(chip && chip.style.display !== 'none') c += ' ' + chip.textContent;
+  }catch(e){}
+  return c;
+}
+function _ovnPromptChat(userText){
+  try{
+    if(typeof window.ovpemNoticeResoudreConv !== 'function') return '';
+    const res = window.ovpemNoticeResoudreConv(userText || '', _ovnContexteConv());
+    if(!window.ovpemNoticeEstApp(res)) return '';
+    return '\n\n' + window.ovpemNoticePromptBloc(res, {mode:'chat'});
+  }catch(e){ return ''; }
+}
+
 function aiBuildSystemPrompt(userText){
   const aud = aiGetAudience();
   const ctx = _kbPick(userText);
@@ -18832,7 +18922,7 @@ function aiBuildSystemPrompt(userText){
     'Cette base fait autorité. En cas de contradiction avec tes connaissances générales, tu suis cette base.\n' + kb +
     '\n\n═══ SECTIONS MÉDIA À RENSEIGNER ═══\n' +
     'SCHÉMA : une seule clé, choisie STRICTEMENT dans cette liste, ou "aucun" si rien ne colle. N\'invente jamais de clé.\n' + schemaKeys + '\n' +
-    'RESSOURCE : une ou deux clés séparées par " ; ", choisies STRICTEMENT dans cette liste. N\'écris JAMAIS d\'URL toi-même, le programme résout les clés.\n' + resKeys;
+    'RESSOURCE : une ou deux clés séparées par " ; ", choisies STRICTEMENT dans cette liste. N\'écris JAMAIS d\'URL toi-même, le programme résout les clés.\n' + resKeys + _ovnPromptChat(userText);
 }
 
 /* ─── 6. RENDU DES BLOCS MÉDIA ─────────────────────────────────────────── */
@@ -18956,7 +19046,7 @@ function ovpemSchemaOpen(key){
   });
   lg += '</div>';
   bd.innerHTML = desc + s.svg + lg +
-    '<div class="schv-foot"><span>OVPEM v' + (typeof OVPEM_VERSION !== 'undefined' ? OVPEM_VERSION : '2.89') +
+    '<div class="schv-foot"><span>OVPEM v' + (typeof OVPEM_VERSION !== 'undefined' ? OVPEM_VERSION : '3.04') +
     ' · Schéma générique — se référer à l\u2019éclaté du modèle avant commande.</span>' +
     '<button class="schv-print" onclick="ovpemSchemaPrint()">🖨 Imprimer</button></div>';
   ov.classList.add('show');
@@ -19030,6 +19120,12 @@ function aiChatRender(){
         return '<span style="display:inline-block;background:rgba(251,146,60,.12);border-left:3px solid #fb923c;padding:6px 10px;margin:4px 0;border-radius:4px;color:#fdba74;font-weight:600;">' +
                prefix + '<span style="color:#fb923c;">' + cleanParts + '</span></span>';
       });
+      // V3.01 — libellé de la procédure application
+      text = text.replace(/(📱\uFE0F?\s*PROC[ÉE]DURE\s+APPLICATION\s*:)/i, '<b class="ovn-proc-lbl">$1</b>');
+      // V3.02 — sections RCD (comptoir distant)
+      text = text.replace(/(📞\uFE0F?\s*[ÀA]\s+FAIRE\s+FAIRE\s+AU\s+CLIENT\s*:)/i, '<b class="rcd-lbl">$1</b>')
+                 .replace(/(✅\uFE0F?\s*SI\s+C(?:&#39;|['’])EST\s+R[ÉE]SOLU\s*:)/i, '<b class="rcd-lbl rcd-ok">$1</b>')
+                 .replace(/(🏪\uFE0F?\s*SI\s+CE\s+N(?:&#39;|['’])EST\s+PAS\s+R[ÉE]SOLU\s*:)/i, '<b class="rcd-lbl rcd-ko">$1</b>');
       // V2.89 — extraction des blocs media + mise en valeur des blocs de decision
       let _lastQ = '';
       for(let j = idx - 1; j >= 0; j--){
@@ -19042,7 +19138,28 @@ function aiChatRender(){
       } catch(e){ console.warn('[V2.89] extraction media', e); }
     }
     // V2.90 — aucun badge fournisseur : le module se présente uniquement comme « Référent Virtuel »
-    div.innerHTML = text + _aimCards;
+    /* V3.01 — liens directs notice & application sous la réponse (ouvert sur la dernière) */
+    let _ovnHtml = '';
+    if(msg.role === 'model'){
+      try{
+        if(typeof window.ovpemNoticeResoudreConv === 'function'){
+          let _q = '', _ctx = '';
+          for(let j = idx - 1; j >= 0; j--){
+            if(aiChatHistory[j].role !== 'user') continue;
+            if(!_q) _q = aiChatHistory[j].text; else _ctx = aiChatHistory[j].text + ' ' + _ctx;
+          }
+          const _chip = document.getElementById('aiContextChip');
+          if(_chip && _chip.style.display !== 'none') _ctx += ' ' + _chip.textContent;
+          const _res = window.ovpemNoticeResoudreConv(_q, _ctx);
+          if(window.ovpemNoticePertinent(_res)){
+            let _last = true;
+            for(let j = idx + 1; j < aiChatHistory.length; j++){ if(aiChatHistory[j].role === 'model'){ _last = false; break; } }
+            _ovnHtml = window.ovpemNoticePanelHtml(_res, {replie: !_last});
+          }
+        }
+      }catch(e){ console.warn('[V3.01] liens notice', e); }
+    }
+    div.innerHTML = text + _aimCards + _ovnHtml;
     zone.appendChild(div);
 
     // Bouton "Mettre en contribution" après chaque réponse modèle utile
@@ -21756,6 +21873,7 @@ function _cEscape(s){
 /* ─── Injection d'une contribution Magasin dans la base SYMPTOMS ─── */
 function contribInjectMagIntoSymptoms(entry){
   if(typeof SYMPTOMS === 'undefined') return;
+  if(!entry || !entry.brandKey) return; /* V3.02 — fichier importé ou synchronisé incomplet */
   if(!SYMPTOMS[entry.brandKey]) SYMPTOMS[entry.brandKey] = [];
 
   const symptom = {
@@ -23135,9 +23253,6 @@ function statsRender(){
               jauge('Acc\u00e8s IA direct', rDirect, totRoutes, 'linear-gradient(90deg,#3b82f6,#60a5fa)') +
               jauge('Bascule vers une autre cl\u00e9', rFallback, totRoutes, 'linear-gradient(90deg,#6366f1,#818cf8)') +
               jauge('Relais Copilot (pare-feu)', rCopilot, totRoutes, 'linear-gradient(90deg,#f59e0b,#fbbf24)') +
-              (rCopilot > totRoutes / 2
-                ? '<div class="sdb-note warn">\u26a0 Plus de la moiti\u00e9 des r\u00e9ponses passent par Copilot : les acc\u00e8s IA directs sont probablement filtr\u00e9s sur ce poste.</div>'
-                : '') +
             '</div>';
   }
 
@@ -23160,6 +23275,8 @@ function statsRender(){
   });
   html += '</div></div>';
 
+  /* V3.02 — statistiques consolidées de tous les postes (OneDrive) */
+  try{ if(typeof window.statsFlotteHtml === 'function') html += window.statsFlotteHtml(); }catch(e){ console.warn('[V3.02] flotte', e); }
   grid.innerHTML = html;
   if(typeof statsSyncRefreshLabel === 'function') statsSyncRefreshLabel();
 }
@@ -23234,7 +23351,8 @@ function statsSyncRefreshLabel(){
   if(!el) return;
   let prov = 'none';
   try{ if(typeof ovpemGetSyncProvider === 'function') prov = ovpemGetSyncProvider(); }catch(e){}
-  if(prov === 'jsonbin')    el.innerHTML = '\u2601 Serveur configur\u00e9 : <b>JSONBin.io</b>';
+  if(prov === 'onedrive')   el.innerHTML = '\u2601 Serveur configur\u00e9 : <b>OneDrive / SharePoint</b>' + (function(){ try{ const n = localStorage.getItem('ovpem_sync_onedrive_nom'); return n ? ' (dossier \u00ab ' + n.replace(/[<>&"]/g, '') + ' \u00bb)' : ''; }catch(e){ return ''; } })();
+  else if(prov === 'jsonbin')    el.innerHTML = '\u2601 Serveur configur\u00e9 : <b>JSONBin.io</b>';
   else if(prov === 'gas')   el.innerHTML = '\u2601 Serveur configur\u00e9 : <b>Google Apps Script</b>';
   else el.innerHTML = '\u26a0 Aucun serveur configur\u00e9 \u2014 \ud83d\udd27 Acc\u00e8s administrateur \u2192 Synchronisation';
 }
@@ -23248,7 +23366,7 @@ async function statsPushToServer(){
   let provider = null;
   try{ provider = (typeof ovpemGetActiveSyncProvider === 'function') ? ovpemGetActiveSyncProvider() : null; }catch(e){}
   if(!provider){
-    dire('\u274c Aucun serveur de synchronisation configur\u00e9. Ouvrez \ud83d\udd27 Acc\u00e8s administrateur \u2192 Synchronisation et renseignez JSONBin.io.', 'ko');
+    dire('\u274c Aucun serveur de synchronisation configur\u00e9. Ouvrez \ud83d\udd27 Acc\u00e8s administrateur \u2192 Synchronisation et choisissez OneDrive / SharePoint.', 'ko');
     return;
   }
   if(typeof _ovpemOnline === 'function' && !_ovpemOnline()){
@@ -23413,9 +23531,6 @@ function statsExportPDF(){
       barre('Acc\u00e8s IA direct', rDirect, totRoutes, '#2563eb') +
       barre('Bascule vers une autre cl\u00e9', rFallback, totRoutes, '#6366f1') +
       barre('Relais Copilot (pare-feu)', rCopilot, totRoutes, '#d97706');
-    if(rCopilot > totRoutes / 2){
-      bloc3 += '<div class="note warn">\u26a0 Plus de la moiti\u00e9 des r\u00e9ponses passent par Copilot : les acc\u00e8s IA directs sont probablement filtr\u00e9s sur ce poste.</div>';
-    }
   }
 
   /* \u2500\u2500 Bloc 4 : d\u00e9tail par fonction \u2500\u2500 */
@@ -27289,6 +27404,1902 @@ console.log('[OVPEM V2.49] Triage Rapide activé — quickprobe distinct de Stat
 })();
 </script>
 
+<!-- ═══════════ V3.04 — ACCUEIL : TABLEAU DE BORD CLASSÉ EN THÈMES ═══════════ -->
+<style id="v304-css">
+/* Accueil : tableau de bord classé en thèmes */
+.acc-board{margin:0 0 22px}
+.acc-intro{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px;margin-bottom:16px;border-radius:10px;background:var(--surface2);border:1px solid var(--border)}
+.acc-intro-ico{font-size:18px;line-height:1}
+.acc-intro-txt{font-size:13px;color:var(--text)}
+.acc-intro-aide{font-size:12px;color:var(--text2);margin-left:auto}
+.acc-theme{margin-bottom:18px}
+.acc-theme-head{display:flex;align-items:center;gap:9px;margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--border)}
+.acc-theme-ico{font-size:17px;line-height:1}
+.acc-theme-txt{display:flex;flex-direction:column}
+.acc-theme-t{font-size:14px;font-weight:800;color:var(--text);letter-spacing:.01em}
+.acc-theme-s{font-size:11.5px;color:var(--text2)}
+.acc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(252px,1fr));gap:10px}
+.acc-tuile{display:flex;align-items:flex-start;gap:10px;text-align:left;padding:12px 13px;border-radius:11px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:inherit;cursor:pointer;transition:transform .12s,border-color .12s,box-shadow .12s}
+.acc-tuile:hover{transform:translateY(-2px);border-color:var(--accent);box-shadow:var(--shadow-lg,0 6px 18px rgba(0,0,0,.28))}
+.acc-tuile:focus-visible{outline:2px solid var(--accent2);outline-offset:2px}
+.acc-ico{font-size:20px;line-height:1.15;flex-shrink:0}
+.acc-txt{display:flex;flex-direction:column;gap:3px}
+.acc-t{font-size:13px;font-weight:700;color:var(--text)}
+.acc-d{font-size:11.5px;line-height:1.45;color:var(--text2)}
+.acc-fort{border-color:var(--accent);background:linear-gradient(135deg,var(--accent-glow),transparent)}
+.acc-fort .acc-t{color:var(--accent2)}
+.light .acc-fort .acc-t{color:#1d4ed8}
+.acc-flash{animation:accFlash 1.6s ease-out}
+@keyframes accFlash{0%,100%{box-shadow:none}15%,60%{box-shadow:0 0 0 3px var(--accent-glow),0 0 0 1px var(--accent)}}
+#page-home .guide-selector{display:none}
+@media(max-width:700px){.acc-grid{grid-template-columns:1fr}.acc-intro-aide{margin-left:0}}
+@media print{.acc-board{display:none}}
+@media (prefers-reduced-motion:reduce){.acc-tuile{transition:none}.acc-flash{animation:none}}
+
+/* ── Profil Magasin / Hotline / RCD : écran épuré (V3.04) ── */
+body.profile-novice .sidebar-nav .nav-group,
+body.profile-novice .topbar-actions,
+body.profile-novice .topbar-search,
+body.profile-novice #page-home .quick-title,
+body.profile-novice #page-home .quick-grid,
+body.profile-novice #topPannesToggle,
+body.profile-novice #topPannesGrid{display:none!important}
+body.profile-novice.acc-recherche .topbar-search{display:flex!important}
+/* Retour au tableau de bord (hors accueil, profil Magasin / Hotline / RCD) */
+#accueilRetour{display:none}
+body.profile-novice.acc-hors-accueil #accueilRetour{display:inline-flex;align-items:center;gap:6px}
+/* Carte « Codes erreur par marque » dépliée */
+.acc-marques[hidden]{display:none}
+.acc-marques{margin-top:10px;padding:12px 14px;border:1px solid var(--border);border-radius:11px;background:var(--bg3);display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.acc-marque{padding:9px 11px;border-radius:9px;background:var(--surface);border:1px solid var(--border)}
+.acc-marque-nom{font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--text2);margin-bottom:6px}
+.acc-marque-liens{display:flex;flex-wrap:wrap;gap:6px}
+.acc-marque-lien{padding:5px 10px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--text);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer}
+.acc-marque-lien:hover{border-color:var(--accent);color:var(--accent2)}
+.light .acc-marque-lien:hover{color:#1d4ed8}
+.acc-marque-lien:focus-visible{outline:2px solid var(--accent2);outline-offset:2px}
+.acc-marques-vide{font-size:12px;color:var(--text2)}
+/* Décodeur Verbatim mis en évidence pour le profil Magasin / Hotline / RCD */
+@keyframes accBattement{0%,100%{box-shadow:0 0 0 0 rgba(99,102,241,0);border-color:var(--accent)}50%{box-shadow:0 0 0 5px rgba(99,102,241,.32);border-color:#818cf8}}
+body.profile-novice .acc-tuile[data-acc="decodeur"]{border-color:#6366f1;animation:accBattement 1.9s ease-in-out infinite}
+body.profile-novice .acc-tuile[data-acc="decodeur"]:hover{animation-play-state:paused}
+@media (prefers-reduced-motion:reduce){body.profile-novice .acc-tuile[data-acc="decodeur"]{animation:none;box-shadow:0 0 0 3px rgba(99,102,241,.3)}}
+</style>
+<script>
+/* ═══════════════════════════════════════════════════════════════════════
+   OVPEM V3.04 — Accueil : tableau de bord classé en thèmes
+   Affiché au lancement pour les deux profils :
+     • Magasin / Hotline / RCD — Guidage rapide IA  (profil « novice »)
+       Écran épuré : ni menu latéral, ni barre d'outils, ni grille de
+       marques. Tout passe par les cartes ci-dessous.
+     • Atelier / Technicien — Accès complet         (profil « expert »)
+   Trois thèmes seulement : Diagnostiquer · Trouver une information ·
+   Suivre et partager. Les cartes sont filtrées selon le profil ;
+   aucune carte n'ouvre une fonction interdite au profil.
+   ═══════════════════════════════════════════════════════════════════════ */
+(function (root) {
+  'use strict';
+
+  var doc = (typeof document !== 'undefined') ? document : null;
+
+  var THEMES = [
+    { id: 'diagnostiquer', ico: '🔎', titre: 'Diagnostiquer', sous: 'Trouver la panne et la solution' },
+    { id: 'informer', ico: '📚', titre: 'Trouver une information', sous: 'Codes erreur, procédures et documents' },
+    { id: 'suivre', ico: '📈', titre: 'Suivre et partager', sous: 'Chiffres, contributions et réglages' }
+  ];
+
+  var TUILES = [
+    /* ── Diagnostiquer ── */
+    { theme: 'diagnostiquer', id: 'wizard', ico: '🧭', titre: 'Guide Novice', fort: true,
+      desc: 'Trois questions simples : marque, symptôme, modèle. Solution directe, sans technique.',
+      profils: ['novice', 'expert'] },
+    { theme: 'diagnostiquer', id: 'decodeur', ico: '🧩', titre: 'Décodeur Verbatim PEM', fort: true,
+      desc: 'Collez les mots du client : fiche de diagnostic et solution à distance à lui faire appliquer.',
+      profils: ['novice', 'expert'] },
+    { theme: 'diagnostiquer', id: 'referent', ico: '🤖', titre: 'Référent Virtuel',
+      desc: 'Diagnostic assisté par l’IA, calibré sur votre rôle.', profils: ['expert'] },
+    { theme: 'diagnostiquer', id: 'triage', ico: '⚡', titre: 'Triage Rapide',
+      desc: 'Panorama des défauts d’une marque, classés par gravité.', profils: ['novice', 'expert'] },
+    { theme: 'diagnostiquer', id: 'photo', ico: '📷', titre: 'Analyse Photo',
+      desc: 'Avis technique sur une pièce à partir d’une photo.', profils: ['novice', 'expert'] },
+    /* ── Trouver une information ── */
+    { theme: 'informer', id: 'marques', ico: '🏷️', titre: 'Codes erreur par marque', fort: true,
+      desc: 'Roborock, Dreame, Ecovacs, iRobot : codes, pannes et diagnostics.', profils: ['novice', 'expert'] },
+    { theme: 'informer', id: 'expert', ico: '⚡', titre: 'Accès Expert', fort: true,
+      desc: 'Documents PDF, portails métiers, bulletins techniques et logs.', profils: ['expert'] },
+    { theme: 'informer', id: 'entretien', ico: '🧹', titre: 'Entretien périodique',
+      desc: 'Gestes d’entretien et consommables, toutes marques.', profils: ['novice', 'expert'] },
+    { theme: 'informer', id: 'anatomie', ico: '📖', titre: 'Architecture des appareils',
+      desc: 'Vues détaillées et repérage des composants.', profils: ['novice', 'expert'] },
+    { theme: 'informer', id: 'liens', ico: '🔗', titre: 'Liens et portails',
+      desc: 'Sites constructeurs, notices officielles et outils métier.', profils: ['novice', 'expert'] },
+    { theme: 'informer', id: 'reset', ico: '🔄', titre: 'Factory Reset',
+      desc: 'Procédures de réinitialisation, modèle par modèle.', profils: ['novice', 'expert'] },
+    { theme: 'informer', id: 'bit', ico: '🧪', titre: 'Mode BIT et tests',
+      desc: 'Autotests Roborock et vérification des stations.', profils: ['expert'] },
+    { theme: 'informer', id: 'recherche', ico: '🔍', titre: 'Recherche globale',
+      desc: 'Un code, un symptôme, une marque : cherchez dans tout l’outil.', profils: ['novice', 'expert'] },
+    /* ── Suivre et partager ── */
+    { theme: 'suivre', id: 'pstats', ico: '📈', titre: 'Stats Pannes',
+      desc: 'Taux de résolution par marque, modèle et symptôme.', profils: ['novice', 'expert'] },
+    { theme: 'suivre', id: 'stats', ico: '📊', titre: 'Statistiques d’utilisation',
+      desc: 'Activité de l’outil, et de tous les postes partagés.', profils: ['novice', 'expert'] },
+    { theme: 'suivre', id: 'contact', ico: '✉️', titre: 'Contacter le référent',
+      desc: 'Symptôme absent ou solution insuffisante : demandez de l’aide.', profils: ['novice', 'expert'] },
+    { theme: 'suivre', id: 'contribMag', ico: '💎', titre: 'Contribution Magasin',
+      desc: 'Ajouter un symptôme et sa solution au guide.', profils: ['expert'] },
+    { theme: 'suivre', id: 'contribAtel', ico: '💎', titre: 'Contribution Atelier',
+      desc: 'Ajouter une ressource technique ou un document.', profils: ['expert'] },
+    { theme: 'suivre', id: 'admin', ico: '🔧', titre: 'Accès administrateur',
+      desc: 'Réglages, synchronisation OneDrive, données et sécurité.', profils: ['expert'] }
+  ];
+
+  var PROFILS = {
+    novice: { nom: 'Magasin / Hotline / RCD', sous: 'Guidage rapide IA', ico: '🏪' },
+    expert: { nom: 'Atelier / Technicien', sous: 'Accès complet', ico: '🔧' }
+  };
+
+  function page(id) { return function () { if (typeof root.showPage === 'function') root.showPage(id); }; }
+  function appel(nom, arg) {
+    return function () { try { if (typeof root[nom] === 'function') root[nom](arg); } catch (e) { console.warn('[V3.04] ' + nom, e); } };
+  }
+  var ACTIONS = {
+    wizard: page('wizard'),
+    decodeur: function () { try { if (root.OVD && root.OVD.open) root.OVD.open(); } catch (e) { console.warn('[V3.04] Décodeur', e); } },
+    referent: appel('aiOpen'),
+    triage: appel('quickprobeOpen'),
+    photo: appel('photoAnalyseOpen'),
+    marques: function () { api.marques(); },
+    expert: page('expert'),
+    entretien: page('entretien'),
+    anatomie: page('anatomie'),
+    liens: page('liens'),
+    reset: page('rr-reset'),
+    bit: page('rr-bit'),
+    recherche: function () { api.recherche(); },
+    pstats: appel('pstatsOpen'),
+    stats: appel('statsOpen'),
+    contact: appel('referentContactOpen', 'accueil'),
+    contribMag: appel('contribOpen', 'magasin'),
+    contribAtel: appel('contribOpen', 'atelier'),
+    admin: appel('adminSettingsOpen')
+  };
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function profilActif() {
+    try { if (typeof currentProfile !== 'undefined' && currentProfile) return currentProfile; } catch (e) { /* portée */ }
+    if (doc && doc.body && doc.body.classList.contains('profile-novice')) return 'novice';
+    return 'expert';
+  }
+  function tuilesPour(profil) {
+    return TUILES.filter(function (t) { return t.profils.indexOf(profil) !== -1; });
+  }
+
+  /* Marques et sections disponibles, relevées dans le menu (familles ajoutées comprises).
+     Les entrées masquées pour le profil en cours sont ignorées. */
+  function marquesDispo() {
+    var out = [];
+    if (!doc) return out;
+    Array.prototype.forEach.call(doc.querySelectorAll('.sidebar-nav .nav-group'), function (g) {
+      var lab = g.querySelector('.nav-label');
+      var nom = lab ? (lab.textContent || '').trim() : '';
+      if (!nom || /^(accueil|g[ée]n[ée]ral)$/i.test(nom)) return;
+      var liens = [];
+      Array.prototype.forEach.call(g.querySelectorAll('.nav-item'), function (a) {
+        if (a.style.display === 'none') return;
+        var m = (a.getAttribute('onclick') || '').match(/showPage\('([^']+)'\)/);
+        if (!m) return;
+        liens.push({ page: m[1], libelle: (a.textContent || '').trim() });
+      });
+      if (liens.length) out.push({ nom: nom, liens: liens });
+    });
+    return out;
+  }
+  function marquesHtml() {
+    var marques = marquesDispo();
+    if (!marques.length) return '<div class="acc-marques-vide">Aucune marque disponible pour ce profil.</div>';
+    return marques.map(function (m) {
+      return '<div class="acc-marque"><div class="acc-marque-nom">' + esc(m.nom) + '</div><div class="acc-marque-liens">' +
+        m.liens.map(function (l) {
+          return '<button type="button" class="acc-marque-lien" data-page="' + esc(l.page) + '">' + esc(l.libelle) + '</button>';
+        }).join('') + '</div></div>';
+    }).join('');
+  }
+
+  function html(profil) {
+    var p = PROFILS[profil] || PROFILS.expert;
+    var tuiles = tuilesPour(profil);
+    var h = '<div class="acc-intro"><span class="acc-intro-ico">' + p.ico + '</span>' +
+      '<span class="acc-intro-txt"><b>' + esc(p.nom) + '</b> — ' + esc(p.sous) + '</span>' +
+      '<span class="acc-intro-aide">Choisissez une carte pour démarrer.</span></div>';
+    THEMES.forEach(function (th) {
+      var lot = tuiles.filter(function (t) { return t.theme === th.id; });
+      if (!lot.length) return;
+      h += '<section class="acc-theme" data-theme="' + th.id + '">' +
+        '<div class="acc-theme-head"><span class="acc-theme-ico">' + th.ico + '</span>' +
+        '<span class="acc-theme-txt"><span class="acc-theme-t">' + esc(th.titre) + '</span>' +
+        '<span class="acc-theme-s">' + esc(th.sous) + '</span></span></div><div class="acc-grid">';
+      lot.forEach(function (t) {
+        h += '<button type="button" class="acc-tuile' + (t.fort ? ' acc-fort' : '') + '" data-acc="' + esc(t.id) + '"' +
+          (t.id === 'marques' ? ' aria-expanded="false" aria-controls="accMarques"' : '') + '>' +
+          '<span class="acc-ico">' + t.ico + '</span>' +
+          '<span class="acc-txt"><span class="acc-t">' + esc(t.titre) + '</span>' +
+          '<span class="acc-d">' + esc(t.desc) + '</span></span></button>';
+      });
+      h += '</div>';
+      if (th.id === 'informer') h += '<div class="acc-marques" id="accMarques" hidden></div>';
+      h += '</section>';
+    });
+    return h;
+  }
+
+  var api = {
+    THEMES: THEMES, TUILES: TUILES, PROFILS: PROFILS, tuilesPour: tuilesPour, html: html,
+    marquesDispo: marquesDispo, marquesHtml: marquesHtml,
+    render: function () {
+      if (!doc) return;
+      var board = doc.getElementById('accueilBoard');
+      if (!board) return;
+      var profil = profilActif();
+      if (board.getAttribute('data-profil') === profil && board.children.length) return;
+      board.innerHTML = html(profil);
+      board.setAttribute('data-profil', profil);
+    },
+    /* Carte « Codes erreur par marque » : déplie la liste des marques et de leurs sections */
+    marques: function () {
+      if (!doc) return;
+      if (typeof root.showPage === 'function') root.showPage('home');
+      var panneau = doc.getElementById('accMarques');
+      var carte = doc.querySelector('#accueilBoard .acc-tuile[data-acc="marques"]');
+      if (!panneau) return;
+      if (!panneau.getAttribute('data-pret')) {
+        panneau.innerHTML = marquesHtml();
+        panneau.setAttribute('data-pret', '1');
+      }
+      var ouvrir = panneau.hidden;
+      panneau.hidden = !ouvrir;
+      if (carte) carte.setAttribute('aria-expanded', ouvrir ? 'true' : 'false');
+      if (ouvrir && panneau.scrollIntoView) panneau.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    },
+    /* Carte « Recherche globale » : affiche la barre de recherche (masquée en profil Magasin/Hotline/RCD) */
+    recherche: function () {
+      if (!doc) return;
+      doc.body.classList.add('acc-recherche');
+      var champ = doc.getElementById('globalSearch');
+      if (!champ) return;
+      try { root.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) { /* */ }
+      champ.focus();
+      champ.classList.add('acc-flash');
+      setTimeout(function () { champ.classList.remove('acc-flash'); }, 1600);
+    },
+    /* Retour au tableau de bord */
+    retour: function () {
+      if (typeof root.showPage === 'function') root.showPage('home');
+      try { root.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) { /* */ }
+    },
+    /* Bouton de retour affiché uniquement hors du tableau de bord */
+    majRetour: function () {
+      if (!doc || !doc.body) return;
+      var actif = doc.querySelector('.page.active');
+      var surAccueil = !!actif && actif.id === 'page-home';
+      doc.body.classList.toggle('acc-hors-accueil', !surAccueil);
+    },
+    action: function (id) { if (ACTIONS[id]) ACTIONS[id](); },
+    actionsDispo: Object.keys(ACTIONS),
+    pageDeLaTuile: { wizard: 'wizard', expert: 'expert', entretien: 'entretien', anatomie: 'anatomie', liens: 'liens', reset: 'rr-reset', bit: 'rr-bit', marques: 'home' }
+  };
+  root.ovpemAccueil = api;
+
+  if (doc && doc.addEventListener) {
+    doc.addEventListener('click', function (ev) {
+      var cible = ev.target && ev.target.closest ? ev.target.closest('[data-acc],[data-page]') : null;
+      if (!cible) return;
+      if (cible.hasAttribute('data-acc')) {
+        ev.preventDefault();
+        api.action(cible.getAttribute('data-acc'));
+      } else if (cible.classList.contains('acc-marque-lien')) {
+        ev.preventDefault();
+        if (typeof root.showPage === 'function') root.showPage(cible.getAttribute('data-page'));
+      }
+    });
+    var demarrer = function () {
+      /* Re-rendu à chaque affichage de l'accueil + bouton de retour */
+      var precedent = root.showPage;
+      if (typeof precedent === 'function' && !precedent._accueil) {
+        var enveloppe = function (id) {
+          var r = precedent.apply(this, arguments);
+          if (id === 'home') api.render();
+          api.majRetour();
+          return r;
+        };
+        enveloppe._accueil = true;
+        root.showPage = enveloppe;
+      }
+      api.render();
+      api.majRetour();
+    };
+    if (doc.readyState === 'loading') doc.addEventListener('DOMContentLoaded', demarrer); else demarrer();
+  }
+
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+})(typeof window !== 'undefined' ? window : globalThis);
+</script>
+
+<!-- ═══════════ V3.02 — SYNCHRO ONEDRIVE / SHAREPOINT · AIDE À LA DESCRIPTION · STATISTIQUES TOUS POSTES ═══════════ -->
+<style id="v302-css">
+/* Décodeur : aide à la description */
+.ovd-aide{margin-top:8px}
+.ovd-aide-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.ovd-qualite{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.ovd-q-score{font-size:12px;font-weight:700;color:var(--text);margin-right:2px}
+.ovd-q-pill{display:inline-flex;align-items:center;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:600;border:1px solid var(--border2);color:var(--text2);background:var(--surface2)}
+.ovd-q-pill.ok{border-color:rgba(34,197,94,.5);background:rgba(34,197,94,.12);color:#86efac}
+.ovd-aide-conseil{margin-top:6px;font-size:12px;line-height:1.45;color:var(--text2)}
+.ovd-aide-panel{margin-top:10px;padding:12px 14px;border:1px solid var(--border);border-radius:10px;background:var(--bg3)}
+.ovd-aide-intro{font-size:12px;color:var(--text2);margin-bottom:10px}
+.ovd-aide-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px 16px}
+.ovd-aide-champ .ovd-input{width:100%;box-sizing:border-box}
+.ovd-aide-champ .ovd-input.ovd-requis{border-color:#ef4444;box-shadow:0 0 0 2px rgba(239,68,68,.25)}
+.ovd-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.ovd-chip{padding:3px 9px;border-radius:999px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-size:11px;line-height:1.35;cursor:pointer;font-family:inherit}
+.ovd-chip:hover{border-color:#6366f1;color:var(--text)}
+.ovd-chip.on{background:rgba(99,102,241,.2);border-color:#6366f1;color:var(--text)}
+.ovd-aide-apercu{margin-top:12px;padding:8px 10px;border-radius:8px;background:var(--surface2);border:1px dashed var(--border2);font-size:12.5px;line-height:1.5;color:var(--text)}
+.ovd-aide-apercu b{color:var(--text2);font-weight:600;margin-right:8px}
+.ovd-aide-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.ovd-btn.ovd-btn-ecrire{background:#6366f1;border-color:#6366f1;color:#fff;font-weight:600}
+.ovd-btn.ovd-btn-ecrire:hover{background:#4f46e5;color:#fff}
+.ovd-aide-mode{margin-top:12px;padding:10px 12px;border-radius:8px;border-left:3px solid #6366f1;background:rgba(99,102,241,.08)}
+.ovd-aide-mode-t{font-size:12.5px;font-weight:700;color:var(--text);margin-bottom:4px}
+.ovd-aide-mode ol{margin:0 0 0 18px;padding:0;font-size:12.5px;line-height:1.55;color:var(--text)}
+.ovd-aide-ex{display:grid;gap:4px;margin-top:8px;font-size:12px;line-height:1.45}
+.ovd-aide-ex .ko{color:#fca5a5}
+.ovd-aide-ex .bon{color:#86efac}
+.ovd-mode-toggle button:focus-visible,.ovd-chip:focus-visible,#ovd-aide-btn:focus-visible{outline:2px solid #818cf8;outline-offset:1px}
+/* Décodeur : guidage à distance (hotline / RCD) */
+.ovd-gd-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+.ovd-gd-head .ovd-section-label{margin-bottom:0}
+.ovd-gd-bloc{margin:8px 0;padding:10px 12px;border-radius:8px;border:1px solid var(--border);border-left-width:3px;background:var(--surface2)}
+.ovd-gd-t{font-size:12.5px;font-weight:700;color:var(--text);margin-bottom:6px}
+.ovd-gd-list{margin:0 0 0 20px;padding:0;font-size:13px;line-height:1.55;color:var(--text)}
+.ovd-gd-list li{margin:4px 0}
+.ovd-gd-res,.ovd-gd-dec{display:block;font-size:12px;color:var(--text2)}
+.ovd-gd-gestes{border-left-color:#22c55e}
+.ovd-gd-questions{border-left-color:#6366f1}
+.ovd-gd-ok{border-left-color:#14b8a6}
+.ovd-gd-ko{border-left-color:#f59e0b}
+.ovd-gd-non{border-left-color:#ef4444}
+.ovd-gd-bloc p{margin:0;font-size:13px;line-height:1.55;color:var(--text)}
+.ovd-gd-non ul{margin:0;padding-left:18px;font-size:13px;line-height:1.55;color:var(--text)}
+.ovd-gd-note{font-size:12px;color:var(--text2);font-style:italic;margin:4px 0}
+.ovd-guidage-replie>summary{cursor:pointer;font-size:10.5px;font-weight:700;color:#a5b4fc;text-transform:uppercase;letter-spacing:.08em;list-style:none}
+.ovd-guidage-replie>summary::-webkit-details-marker{display:none}
+.ovd-guidage-replie>summary::before{content:"▸ ";color:#818cf8}
+.ovd-guidage-replie[open]>summary::before{content:"▾ "}
+.ovd-guidage-replie[open]>summary{margin-bottom:8px}
+/* Référent Virtuel : sections RCD */
+.rcd-lbl{color:#86efac}
+.rcd-lbl.rcd-ok{color:#5eead4}
+.rcd-lbl.rcd-ko{color:#fcd34d}
+/* Statistiques : tous les postes */
+.odf-section{grid-column:1/-1}
+.odf-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.odf-meta{font-size:12px;color:var(--text2)}
+.odf-actions{display:flex;gap:6px;flex-wrap:wrap}
+.odf-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:10px}
+.odf-kpi{padding:8px 10px;border-radius:8px;background:var(--surface2);border:1px solid var(--border)}
+.odf-kpi b{display:block;font-size:18px;line-height:1.3;color:var(--text)}
+.odf-kpi span{font-size:11px;color:var(--text2)}
+.odf-table-wrap{overflow-x:auto}
+.odf-table{width:100%;border-collapse:collapse;font-size:12px}
+.odf-table th,.odf-table td{padding:6px 8px;border-bottom:1px solid var(--border);text-align:left;color:var(--text);white-space:nowrap}
+.odf-table th{font-size:11px;color:var(--text2);font-weight:600}
+.odf-table .n{text-align:right;font-variant-numeric:tabular-nums}
+.odf-table tfoot td{font-weight:700;border-top:2px solid var(--border2);border-bottom:none}
+/* Administration : OneDrive / SharePoint */
+.od-steps{margin:0 0 10px 18px;padding:0;font-size:12px;line-height:1.6;color:var(--text2)}
+.od-steps b{color:var(--text)}
+.od-etat{font-size:12px;color:var(--text);margin:8px 0 10px}
+.od-acces.od-granted{color:#22c55e;font-weight:700}
+.od-acces.od-prompt{color:#f59e0b;font-weight:700}
+.od-acces.od-denied{color:#ef4444;font-weight:700}
+.od-nav{display:none;margin:8px 0;padding:8px 10px;border-radius:6px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.35);font-size:11.5px;color:var(--text)}
+.od-manuel{margin-top:12px;padding:10px 12px;border-radius:8px;border:1px dashed var(--border2);font-size:11.5px;line-height:1.5;color:var(--text2)}
+.od-manuel b{color:var(--text)}
+.od-reprise{position:fixed;left:236px;bottom:16px;z-index:9990;padding:9px 15px;border-radius:999px;border:1px solid rgba(59,130,246,.55);background:var(--surface);color:var(--text);font-family:inherit;font-size:12.5px;font-weight:600;line-height:1.2;box-shadow:0 6px 18px rgba(0,0,0,.35);cursor:pointer}
+.od-reprise:hover{border-color:#3b82f6}
+@media(max-width:800px){.od-reprise{left:14px;bottom:14px}}
+.od-reprise:focus-visible{outline:2px solid #60a5fa;outline-offset:2px}
+/* Thème clair */
+.light .ovd-section-label{color:#4338ca}
+.light .ovd-q-pill.ok{color:#166534;background:rgba(34,197,94,.14);border-color:rgba(22,101,52,.35)}
+.light .ovd-aide-ex .ko{color:#b91c1c}
+.light .ovd-aide-ex .bon{color:#166534}
+.light .ovd-guidage-replie>summary{color:#4338ca}
+.light .ovd-guidage-replie>summary::before{color:#4338ca}
+.light .rcd-lbl{color:#166534}
+.light .rcd-lbl.rcd-ok{color:#0f766e}
+.light .rcd-lbl.rcd-ko{color:#92400e}
+.light .od-acces.od-granted{color:#15803d}
+.light .od-acces.od-prompt{color:#b45309}
+.light .od-acces.od-denied{color:#b91c1c}
+.light .od-reprise{box-shadow:0 6px 18px rgba(15,23,42,.18)}
+@media print{.od-reprise,.ovd-aide{display:none!important}}
+@media (prefers-reduced-motion:reduce){.ovd-chip,.od-reprise{transition:none}}
+</style>
+<script>
+/* ═══════════════════════════════════════════════════════════════════════
+   OVPEM V3.02 — Module complémentaire
+   1. Synchronisation OneDrive / SharePoint : dossier partagé, synchronisé
+      sur chaque poste par le client OneDrive. OVPEM y lit et écrit des
+      fichiers JSON (API d'accès aux fichiers de Chrome / Edge). Aucune clé,
+      aucun appel réseau depuis la page.
+        ovpem_poste_<id>.json  : contributions, réglages, modifications,
+                                 personnalisations admin, statistiques
+        ovpem_stats_<id>.json  : bouton « Envoyer au serveur » des stats
+   2. Personnalisations admin datées par clé (la modification la plus
+      récente l'emporte, suppressions comprises).
+   3. Statistiques consolidées de tous les postes.
+   4. Décodeur Verbatim PEM : aide à la description du symptôme.
+   ═══════════════════════════════════════════════════════════════════════ */
+(function (root) {
+  'use strict';
+
+  var doc = (typeof document !== 'undefined') ? document : null;
+  function store() { try { return root.localStorage || null; } catch (e) { return null; } }
+  function lsGet(k) { try { var s = store(); return s ? s.getItem(k) : null; } catch (e) { return null; } }
+  function lsSet(k, v) { try { var s = store(); if (s) s.setItem(k, v); } catch (e) { /* quota */ } }
+  function lsDel(k) { try { var s = store(); if (s) s.removeItem(k); } catch (e) { /* */ } }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function jsonParse(s, d) { try { var v = JSON.parse(s); return (v === null || v === undefined) ? d : v; } catch (e) { return d; } }
+  function tsIso(s) { var t = Date.parse(s || ''); return isFinite(t) ? t : 0; }
+  function fmtDate(iso) { if (!iso) return '—'; try { return new Date(iso).toLocaleString('fr-FR'); } catch (e) { return String(iso); } }
+  function toast(msg) { try { if (typeof root.adminToast === 'function') root.adminToast(msg); } catch (e) { /* */ } }
+  function provActif() { try { return (typeof root.ovpemGetSyncProvider === 'function') ? root.ovpemGetSyncProvider() : 'none'; } catch (e) { return 'none'; } }
+  function exclus(k) { try { return typeof root.ovpemIsSyncExcluded === 'function' && !!root.ovpemIsSyncExcluded(k); } catch (e) { return false; } }
+  function idPoste() { try { return (typeof root.ovpemGetDeviceId === 'function') ? root.ovpemGetDeviceId() : 'poste'; } catch (e) { return 'poste'; } }
+  function labelPoste() { try { return (typeof root.ovpemGetDeviceLabel === 'function') ? root.ovpemGetDeviceLabel() : ''; } catch (e) { return ''; } }
+
+  /* ═════════════ 1. PERSONNALISATIONS ADMIN DATÉES ═════════════ */
+  var OD = {
+    LS_NOM: 'ovpem_sync_onedrive_nom',
+    LS_FLOTTE: 'ovpem_sync_onedrive_flotte_v1',
+    LS_ETAT: 'ovpem_sync_extras_etat_v1',
+    PREF_POSTE: 'ovpem_poste_',
+    PREF_STATS: 'ovpem_stats_',
+    DB: 'ovpem_onedrive', STORE: 'handles', CLE: 'dossier'
+  };
+  var EXTRAS = [
+    { cle: 'ovpem_custom_families_v1', lbl: 'Familles personnalisées' },
+    { cle: 'ovpem_custom_portails_v1', lbl: 'Portails et outils' },
+    { cle: 'ovpem_custom_diags_v1', lbl: 'Diagnostics personnalisés' },
+    { cle: 'ovpem_custom_docs_v1', lbl: 'Documents personnalisés' },
+    { cle: 'ovpem_hidden_docs_v1', lbl: 'Documents masqués' },
+    { cle: 'savCustomSymptoms_v1', lbl: 'Symptômes personnalisés' },
+    { cle: 'ovpem_decodeur_cas_connus_v1', lbl: 'Cas connus du Décodeur' },
+    { cle: 'ovpem_pstats_custom_models_v1', lbl: 'Modèles ajoutés' }
+  ];
+  function empreinte(str) {
+    var h = 5381, s = String(str == null ? '' : str);
+    for (var i = 0; i < s.length; i++) { h = ((h << 5) + h + s.charCodeAt(i)) | 0; }
+    return (h >>> 0).toString(36) + ':' + s.length;
+  }
+  function estVide(raw) {
+    if (raw == null) return true;
+    var t = String(raw).trim();
+    return t === '' || t === '[]' || t === '{}' || t === 'null' || t === '""';
+  }
+  /* Date de dernière modification de chaque clé, détectée par empreinte.
+     Première observation : 0 si la valeur est vide (un poste neuf n'écrase rien). */
+  function extrasEtat(maintenant) {
+    var etat = jsonParse(lsGet(OD.LS_ETAT), {}) || {};
+    var now = maintenant || Date.now(), change = false;
+    EXTRAS.forEach(function (x) {
+      var raw = lsGet(x.cle), h = empreinte(raw), e = etat[x.cle];
+      if (!e) { etat[x.cle] = { h: h, t: estVide(raw) ? 0 : now }; change = true; }
+      else if (e.h !== h) { etat[x.cle] = { h: h, t: now }; change = true; }
+    });
+    if (change) lsSet(OD.LS_ETAT, JSON.stringify(etat));
+    return etat;
+  }
+  function extrasConstruire() {
+    if (exclus('custom_admin')) return null;
+    var etat = extrasEtat(), out = {};
+    EXTRAS.forEach(function (x) {
+      var raw = lsGet(x.cle);
+      out[x.cle] = { t: etat[x.cle].t, v: raw == null ? null : jsonParse(raw, null) };
+    });
+    return out;
+  }
+  function extrasFusionner(liste) {
+    var res = {};
+    (liste || []).forEach(function (ex) {
+      if (!ex || typeof ex !== 'object') return;
+      Object.keys(ex).forEach(function (k) {
+        var e = ex[k];
+        if (!e || typeof e.t !== 'number') return;
+        if (!res[k] || e.t > res[k].t) res[k] = e;
+      });
+    });
+    return res;
+  }
+  /* Applique une personnalisation distante seulement si elle est plus récente que la locale. */
+  function extrasAppliquer(fusion) {
+    if (!fusion || typeof fusion !== 'object' || exclus('custom_admin')) return 0;
+    var etat = extrasEtat(), n = 0;
+    EXTRAS.forEach(function (x) {
+      var e = fusion[x.cle];
+      var tLocal = etat[x.cle] ? etat[x.cle].t : 0;
+      if (!e || typeof e.t !== 'number' || !(e.t > tLocal)) return;
+      if (e.v === null || e.v === undefined) lsDel(x.cle);
+      else lsSet(x.cle, JSON.stringify(e.v));
+      etat[x.cle] = { h: empreinte(lsGet(x.cle)), t: e.t };
+      n++;
+    });
+    lsSet(OD.LS_ETAT, JSON.stringify(etat));
+    if (n) {
+      ['renderCustomFamilies', 'renderCustomPortails', 'renderCustomDiags', 'customDocsRender'].forEach(function (f) {
+        try { if (typeof root[f] === 'function') root[f](); } catch (err) { /* */ }
+      });
+    }
+    return n;
+  }
+  function extrasSauvegarde() {
+    var o = {};
+    EXTRAS.forEach(function (x) { o[x.cle] = lsGet(x.cle); });
+    return o;
+  }
+
+  /* ═════════════ 2. FICHIERS DES POSTES : FUSION ET FLOTTE ═════════════ */
+  function nomSur(id) { return String(id || 'inconnu').replace(/[^A-Za-z0-9_-]/g, '_').slice(0, 80); }
+  function nomPoste(id) { return OD.PREF_POSTE + nomSur(id) + '.json'; }
+  function nomStats(id) { return OD.PREF_STATS + nomSur(id) + '.json'; }
+
+  function resumePoste(p, f) {
+    return {
+      id: p.device_id || (f && f.nom) || '', label: p.device_label || '', maj: p.pushed_at || null,
+      version: p.ovpem_version || '', stats: p.stats_usage || null,
+      mag: Array.isArray(p.contributions_magasin) ? p.contributions_magasin.length : null,
+      atel: Array.isArray(p.contributions_atelier) ? p.contributions_atelier.length : null
+    };
+  }
+  /* Fusion de tous les fichiers : contributions réunies (la plus récente par id),
+     réglages et modifications du fichier le plus récent, personnalisations par date. */
+  function fusionnerPostes(fichiers, fusionListes) {
+    var merge = fusionListes || root.ovpemMergeContribLists;
+    var tri = (fichiers || []).filter(function (f) { return f && f.data && typeof f.data === 'object' && f.data._type !== 'ovpem_stats_usage'; })
+      .sort(function (a, b) { return tsIso(a.data.pushed_at) - tsIso(b.data.pushed_at); });
+    var res = { schema: 1, _source: 'onedrive', contributions_magasin: [], contributions_atelier: [], inline_edits: {}, postes: [] };
+    var aMag = false, aAtel = false, aEd = false, extras = [];
+    tri.forEach(function (f) {
+      var p = f.data;
+      if (Array.isArray(p.contributions_magasin)) { res.contributions_magasin = merge(res.contributions_magasin, p.contributions_magasin); aMag = true; }
+      if (Array.isArray(p.contributions_atelier)) { res.contributions_atelier = merge(res.contributions_atelier, p.contributions_atelier); aAtel = true; }
+      if (p.inline_edits && typeof p.inline_edits === 'object') { Object.assign(res.inline_edits, p.inline_edits); aEd = true; }
+      if (p.settings_admin && typeof p.settings_admin === 'object') res.settings_admin = p.settings_admin;
+      if (p.extras) extras.push(p.extras);
+      res.postes.push(resumePoste(p, f));
+    });
+    if (!aMag) delete res.contributions_magasin;
+    if (!aAtel) delete res.contributions_atelier;
+    if (!aEd) delete res.inline_edits;
+    if (extras.length) res.extras = extrasFusionner(extras);
+    return res;
+  }
+  /* Instantané de flotte : un enregistrement par poste, statistiques les plus récentes. */
+  function flotteConstruire(postes, statsFichiers) {
+    var parId = {};
+    (postes || []).forEach(function (p) {
+      if (!p || !p.id) return;
+      parId[p.id] = { id: p.id, label: p.label || p.id, maj: p.maj, version: p.version, stats: p.stats, statsMaj: p.stats ? p.maj : null, mag: p.mag, atel: p.atel };
+    });
+    (statsFichiers || []).forEach(function (f) {
+      var d = (f && f.data) || {};
+      if (!d.detail) return;
+      var id = d.device_id || ('stats:' + (d.poste_id || f.nom));
+      var cur = parId[id];
+      if (!cur) cur = parId[id] = { id: id, label: d.device_label || d.poste_label || id, maj: null, stats: null, statsMaj: null };
+      if (!cur.stats || tsIso(d.genere_le) >= tsIso(cur.statsMaj)) { cur.stats = d.detail; cur.statsMaj = d.genere_le; }
+    });
+    var liste = Object.keys(parId).map(function (k) { return parId[k]; })
+      .sort(function (a, b) { return String(a.label).localeCompare(String(b.label), 'fr'); });
+    return { maj: new Date().toISOString(), postes: liste };
+  }
+  function indicateurs(s) {
+    s = s || {};
+    var n = function (k) { return (typeof s[k] === 'number') ? s[k] : 0; };
+    var succes = n('aiChatSuccess'), echecs = n('aiChatFailed'), annul = n('aiChatCancelled');
+    var traitees = succes + echecs, resolu = n('ovdResolu'), atelier = n('ovdAtelier');
+    return { demandes: Math.max(n('aiChatRequests'), traitees + annul), abouties: succes, traitees: traitees,
+      resolu: resolu, atelier: atelier, clos: resolu + atelier, ouvertures: n('referentOpens') };
+  }
+  function pct(a, b) { return b > 0 ? Math.round(a * 1000 / b) / 10 : 0; }
+
+  /* ═════════════ 3. ACCÈS AU DOSSIER ONEDRIVE ═════════════ */
+  var MSG_NAV = "Ce navigateur ne donne pas accès aux dossiers de l'ordinateur (Chrome ou Edge requis, ou fonction bloquée sur ce poste). " +
+    "Utilisez « Exporter le fichier de ce poste », enregistrez-le dans le dossier OneDrive partagé, puis « Importer les fichiers des postes » depuis ce même dossier.";
+  var _dossier = null;
+  function fsDispo() { return typeof root.showDirectoryPicker === 'function'; }
+  function activation() { try { return !!(root.navigator && root.navigator.userActivation && root.navigator.userActivation.isActive); } catch (e) { return false; } }
+
+  function idbOp(mode, fn) {
+    return new Promise(function (res, rej) {
+      if (!root.indexedDB) { rej(new Error('IndexedDB indisponible')); return; }
+      var rq = root.indexedDB.open(OD.DB, 1);
+      rq.onupgradeneeded = function () { rq.result.createObjectStore(OD.STORE); };
+      rq.onerror = function () { rej(rq.error); };
+      rq.onsuccess = function () {
+        var db = rq.result, tx = db.transaction(OD.STORE, mode), op = fn(tx.objectStore(OD.STORE));
+        tx.oncomplete = function () { db.close(); res(op ? op.result : undefined); };
+        tx.onerror = function () { db.close(); rej(tx.error); };
+      };
+    });
+  }
+  var idb = {
+    lire: function () { return idbOp('readonly', function (st) { return st.get(OD.CLE); }); },
+    ecrire: function (h) { return idbOp('readwrite', function (st) { return st.put(h, OD.CLE); }); },
+    effacer: function () { return idbOp('readwrite', function (st) { return st.delete(OD.CLE); }); }
+  };
+
+  async function odDossier(opts) {
+    opts = opts || {};
+    var h = _dossier;
+    if (!h) { try { h = await idb.lire(); } catch (e) { h = null; } }
+    if (!h) return { ok: false, code: 'aucun', error: 'Aucun dossier OneDrive choisi : Accès administrateur → Synchronisation → « Choisir le dossier partagé ».' };
+    _dossier = h;
+    var perm = 'granted';
+    if (typeof h.queryPermission === 'function') {
+      try { perm = await h.queryPermission({ mode: 'readwrite' }); } catch (e) { perm = 'prompt'; }
+      if (perm !== 'granted' && (opts.interactif || activation()) && typeof h.requestPermission === 'function') {
+        try { perm = await h.requestPermission({ mode: 'readwrite' }); } catch (e) { /* pas de geste utilisateur */ }
+      }
+    }
+    if (perm !== 'granted') {
+      return { ok: false, code: 'permission', error: "Accès au dossier OneDrive « " + h.name + " » à confirmer : bouton ☁️ en bas de l'écran, ou Accès administrateur → Synchronisation → « Autoriser l'accès »." };
+    }
+    return { ok: true, dossier: h };
+  }
+  async function odEcrire(dossier, nom, obj) {
+    var fh = await dossier.getFileHandle(nom, { create: true });
+    var w = await fh.createWritable();
+    try { await w.write(JSON.stringify(obj, null, 1)); await w.close(); }
+    catch (e) { try { await w.abort(); } catch (e2) { /* */ } throw e; }
+  }
+  async function odLire(dossier, prefixe) {
+    var fichiers = [], illisibles = [];
+    for await (var entree of dossier.values()) {
+      if (!entree || entree.kind !== 'file') continue;
+      var nom = entree.name || '';
+      if (nom.indexOf(prefixe) !== 0 || !/\.json$/i.test(nom)) continue;
+      try {
+        var f = await entree.getFile();
+        fichiers.push({ nom: nom, data: JSON.parse(await f.text()) });
+      } catch (e) { illisibles.push(nom); }
+    }
+    return { fichiers: fichiers, illisibles: illisibles };
+  }
+  async function odUtiliserDossier(h) {
+    _dossier = h;
+    lsSet(OD.LS_NOM, h && h.name ? h.name : 'dossier');
+    try { await idb.ecrire(h); } catch (e) { /* le dossier reste valable pour la session */ }
+  }
+
+  var SyncProviderOneDrive = {
+    name: 'OneDrive / SharePoint',
+    test: async function () {
+      if (!fsDispo() && !_dossier) return { ok: false, error: MSG_NAV };
+      var d = await odDossier({ interactif: true });
+      if (!d.ok) return d;
+      try {
+        var nt = 'ovpem_test_ecriture.tmp';
+        var fh = await d.dossier.getFileHandle(nt, { create: true });
+        var w = await fh.createWritable(); await w.write('ok'); await w.close();
+        try { await d.dossier.removeEntry(nt); } catch (e) { /* */ }
+        var l = await odLire(d.dossier, OD.PREF_POSTE);
+        return { ok: true, message: "✅ Dossier « " + d.dossier.name + " » accessible en lecture et en écriture.\n" + l.fichiers.length + ' poste(s) déjà présent(s) dans le dossier.' };
+      } catch (e) {
+        return { ok: false, error: "Écriture impossible dans « " + d.dossier.name + " » : " + (e && e.message ? e.message : e) };
+      }
+    },
+    push: async function (payload) {
+      var d = await odDossier();
+      if (!d.ok) return d;
+      try {
+        var p = Object.assign({}, payload || {}), nom;
+        p.device_id = p.device_id || idPoste();
+        p.device_label = p.device_label || labelPoste();
+        if (p._type === 'ovpem_stats_usage') {
+          nom = nomStats(p.device_id);
+        } else {
+          var ex = extrasConstruire();
+          if (ex) p.extras = ex;
+          nom = nomPoste(p.device_id);
+        }
+        await odEcrire(d.dossier, nom, p);
+        return { ok: true, message: "Fichier « " + nom + " » enregistré dans « " + d.dossier.name + " »" };
+      } catch (e) {
+        return { ok: false, error: 'Écriture impossible : ' + (e && e.message ? e.message : e) };
+      }
+    },
+    pull: async function () {
+      var d = await odDossier();
+      if (!d.ok) return d;
+      try {
+        var l = await odLire(d.dossier, OD.PREF_POSTE);
+        var s = await odLire(d.dossier, OD.PREF_STATS);
+        var fus = fusionnerPostes(l.fichiers);
+        lsSet(OD.LS_FLOTTE, JSON.stringify(flotteConstruire(fus.postes, s.fichiers)));
+        if (!l.fichiers.length) return { ok: false, error: "Aucun fichier poste dans le dossier pour l'instant : faites un Push d'abord." };
+        return { ok: true, data: fus, postes: l.fichiers.length, illisibles: l.illisibles };
+      } catch (e) {
+        return { ok: false, error: 'Lecture du dossier impossible : ' + (e && e.message ? e.message : e) };
+      }
+    }
+  };
+
+  /* ═════════════ 4. INTERFACE ADMIN, REPRISE, EXPORT / IMPORT MANUEL ═════════════ */
+  function telecharger(nom, texte) {
+    if (!doc) return;
+    var blob = new Blob([texte], { type: 'application/json;charset=utf-8' });
+    var url = URL.createObjectURL(blob), a = doc.createElement('a');
+    a.href = url; a.download = nom; doc.body.appendChild(a); a.click();
+    setTimeout(function () { try { doc.body.removeChild(a); } catch (e) { /* */ } URL.revokeObjectURL(url); }, 150);
+  }
+  async function odRafraichirEtat() {
+    if (!doc) return;
+    var nomEl = doc.getElementById('astOdNom'), accEl = doc.getElementById('astOdAcces'), navEl = doc.getElementById('astOdNav');
+    if (navEl) navEl.style.display = fsDispo() ? 'none' : 'block';
+    if (!nomEl && !accEl) return;
+    var h = _dossier;
+    if (!h) { try { h = await idb.lire(); } catch (e) { h = null; } }
+    if (nomEl) nomEl.textContent = h ? (h.name || 'dossier') : 'aucun';
+    if (!accEl) return;
+    if (!h) { accEl.textContent = '—'; accEl.className = 'od-acces'; return; }
+    var p = 'granted';
+    if (typeof h.queryPermission === 'function') { try { p = await h.queryPermission({ mode: 'readwrite' }); } catch (e) { p = 'prompt'; } }
+    accEl.textContent = p === 'granted' ? '🟢 autorisé' : (p === 'denied' ? '🔴 refusé par le navigateur' : '🟠 à confirmer');
+    accEl.className = 'od-acces od-' + p;
+  }
+  function masquerReprise() { if (!doc) return; var b = doc.getElementById('odReprise'); if (b) b.remove(); }
+  function afficherReprise() {
+    if (!doc || doc.getElementById('odReprise')) return;
+    var b = doc.createElement('button');
+    b.id = 'odReprise'; b.type = 'button'; b.className = 'od-reprise';
+    b.textContent = '☁️ Reprendre la synchronisation OneDrive';
+    b.title = "Le navigateur demande de confirmer l'accès au dossier partagé après un redémarrage";
+    b.onclick = async function () {
+      var d = await root.odAutoriser();
+      if (d && d.ok && typeof root.ovpemSyncFullCycle === 'function') {
+        b.textContent = '⏳ Synchronisation…';
+        var r = await root.ovpemSyncFullCycle();
+        toast(r && r.ok ? '☁️ Synchronisation OneDrive effectuée' : ('⚠️ ' + ((r && r.error) || 'échec')));
+      }
+      masquerReprise();
+    };
+    doc.body.appendChild(b);
+  }
+  async function verifierReprise() {
+    if (provActif() !== 'onedrive') return;
+    var auto = lsGet('ovpem_sync_auto_on_load') === '1';
+    var inter = 0;
+    try { inter = (typeof root.ovpemGetSyncInterval === 'function') ? root.ovpemGetSyncInterval() : 0; } catch (e) { inter = 0; }
+    if (!auto && !(inter > 0)) return;
+    var h = null;
+    try { h = await idb.lire(); } catch (e) { return; }
+    if (!h || typeof h.queryPermission !== 'function') return;
+    var p = 'granted';
+    try { p = await h.queryPermission({ mode: 'readwrite' }); } catch (e) { return; }
+    if (p !== 'granted') afficherReprise();
+  }
+
+  root.odChoisirDossier = async function () {
+    if (!fsDispo()) { alert(MSG_NAV); return; }
+    try {
+      var h = await root.showDirectoryPicker({ id: 'ovpem-onedrive', mode: 'readwrite' });
+      await odUtiliserDossier(h);
+      masquerReprise();
+      toast("📁 Dossier « " + h.name + " » enregistré pour la synchronisation");
+    } catch (e) {
+      if (e && e.name === 'AbortError') return;
+      alert('❌ Sélection impossible : ' + (e && e.message ? e.message : e) + '\n\n' + MSG_NAV);
+    } finally { odRafraichirEtat(); }
+  };
+  root.odAutoriser = async function () {
+    var d = await odDossier({ interactif: true });
+    odRafraichirEtat();
+    if (d.ok) { masquerReprise(); toast("🔓 Accès au dossier « " + d.dossier.name + " » accordé"); }
+    else alert('❌ ' + d.error);
+    return d;
+  };
+  root.odOublier = async function () {
+    if (!confirm('Oublier le dossier OneDrive sur ce poste ?\n\nLes fichiers du dossier ne sont pas supprimés.')) return;
+    _dossier = null; lsDel(OD.LS_NOM);
+    try { await idb.effacer(); } catch (e) { /* */ }
+    odRafraichirEtat();
+  };
+  root.odExporterPoste = function () {
+    var p = (typeof root.ovpemBuildSyncPayload === 'function') ? root.ovpemBuildSyncPayload() : {};
+    var ex = extrasConstruire();
+    if (ex) p.extras = ex;
+    p.device_id = p.device_id || idPoste();
+    telecharger(nomPoste(p.device_id), JSON.stringify(p, null, 1));
+    toast('⬇️ Fichier du poste exporté : enregistrez-le dans le dossier OneDrive partagé');
+  };
+  root.odImporterFichiers = function () {
+    if (!doc) return;
+    var inp = doc.createElement('input');
+    inp.type = 'file'; inp.accept = '.json,application/json'; inp.multiple = true;
+    inp.id = 'odImportInput'; inp.style.display = 'none';
+    inp.onchange = async function () {
+      var lus = [];
+      for (var i = 0; i < inp.files.length; i++) {
+        try { lus.push({ nom: inp.files[i].name, data: JSON.parse(await inp.files[i].text()) }); } catch (e) { /* fichier ignoré */ }
+      }
+      try { inp.remove(); } catch (e) { /* */ }
+      var postes = lus.filter(function (f) { return f.data && f.data._type !== 'ovpem_stats_usage' && (f.data.device_id || f.data.pushed_at); });
+      var stats = lus.filter(function (f) { return f.data && f.data._type === 'ovpem_stats_usage'; });
+      if (!postes.length && !stats.length) { alert('Aucun fichier OVPEM reconnu (ovpem_poste_… ou ovpem_stats_…).'); return; }
+      var fus = fusionnerPostes(postes);
+      lsSet(OD.LS_FLOTTE, JSON.stringify(flotteConstruire(fus.postes, stats)));
+      var msg = '✅ ' + lus.length + ' fichier(s) importé(s).';
+      if (postes.length && typeof root.ovpemApplyRemotePayload === 'function') {
+        try { if (typeof root._ovpemBackupBeforePull === 'function') root._ovpemBackupBeforePull(); } catch (e) { /* */ }
+        var r = root.ovpemApplyRemotePayload(fus);
+        var sm = (r && r.summary) || {};
+        msg += '\n• Contributions magasin : ' + (sm.merged_mag || 0) + '\n• Contributions atelier : ' + (sm.merged_atel || 0);
+        if (sm.applied_extras) msg += '\n• Personnalisations admin : ' + sm.applied_extras;
+      }
+      if (stats.length || postes.length) msg += '\n• Statistiques de ' + flotteConstruire(fus.postes, stats).postes.length + ' poste(s) disponibles dans 📊 Statistiques';
+      alert(msg);
+      try { if (typeof root.statsRender === 'function') root.statsRender(); } catch (e) { /* */ }
+      try { if (typeof root.astSyncRefresh === 'function' && doc.getElementById('astPaneSync')) root.astSyncRefresh(); } catch (e) { /* */ }
+    };
+    doc.body.appendChild(inp);
+    inp.click();
+  };
+  root.odRafraichirEtat = odRafraichirEtat;
+  root.odAppliquerExtras = extrasAppliquer;
+  root.odSauvegardeExtras = extrasSauvegarde;
+  root.SyncProviderOneDrive = SyncProviderOneDrive;
+
+  /* ═════════════ 5. STATISTIQUES : TOUS LES POSTES ═════════════ */
+  root.statsFlotteHtml = function () {
+    var prov = provActif();
+    var snap = jsonParse(lsGet(OD.LS_FLOTTE), null);
+    if (prov !== 'onedrive' && !(snap && snap.postes && snap.postes.length)) return '';
+    var h = '<div class="sdb-section odf-section"><div class="sdb-title">🏢 Tous les postes (OneDrive / SharePoint)</div>';
+    h += '<div class="odf-bar"><span class="odf-meta">' + (snap && snap.postes ? (snap.postes.length + ' poste(s), relevé du ' + esc(fmtDate(snap.maj))) : "Aucun relevé pour l'instant : actualisez depuis le dossier partagé.") + '</span><span class="odf-actions">';
+    if (prov === 'onedrive') h += '<button type="button" class="v28-btn" onclick="statsFlotteActualiser(this)">🔄 Actualiser depuis OneDrive</button>';
+    h += '<button type="button" class="v28-btn" onclick="odImporterFichiers()">⬆️ Importer des fichiers</button></span></div>';
+    if (snap && snap.postes && snap.postes.length) {
+      var T = { demandes: 0, abouties: 0, traitees: 0, resolu: 0, clos: 0 };
+      var lignes = snap.postes.map(function (p) {
+        var I = indicateurs(p.stats);
+        T.demandes += I.demandes; T.abouties += I.abouties; T.traitees += I.traitees; T.resolu += I.resolu; T.clos += I.clos;
+        return '<tr><td>' + esc(p.label) + '</td><td>' + esc(fmtDate(p.maj || p.statsMaj)) + '</td>' +
+          '<td class="n">' + I.demandes + '</td><td class="n">' + (I.traitees ? pct(I.abouties, I.traitees) + ' %' : '—') + '</td>' +
+          '<td class="n">' + I.clos + '</td><td class="n">' + (I.clos ? pct(I.resolu, I.clos) + ' %' : '—') + '</td></tr>';
+      });
+      var kpi = function (v, l) { return '<div class="odf-kpi"><b>' + v + '</b><span>' + l + '</span></div>'; };
+      h += '<div class="odf-kpis">' + kpi(T.demandes, 'Requêtes IA (tous postes)') +
+        kpi(T.traitees ? pct(T.abouties, T.traitees) + ' %' : '—', 'Réponses IA abouties') +
+        kpi(T.clos, 'Diagnostics clos') +
+        kpi(T.clos ? pct(T.resolu, T.clos) + ' %' : '—', 'Résolus sans atelier') + '</div>';
+      h += '<div class="odf-table-wrap"><table class="odf-table"><thead><tr><th>Poste</th><th>Dernier envoi</th><th class="n">Requêtes IA</th><th class="n">Abouties</th><th class="n">Diagnostics clos</th><th class="n">Résolus sans atelier</th></tr></thead><tbody>' +
+        lignes.join('') + '</tbody><tfoot><tr><td>Total</td><td>' + snap.postes.length + ' poste(s)</td><td class="n">' + T.demandes + '</td><td class="n">' +
+        (T.traitees ? pct(T.abouties, T.traitees) + ' %' : '—') + '</td><td class="n">' + T.clos + '</td><td class="n">' + (T.clos ? pct(T.resolu, T.clos) + ' %' : '—') + '</td></tr></tfoot></table></div>';
+    }
+    return h + '</div>';
+  };
+  root.statsFlotteActualiser = async function (btn) {
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Lecture du dossier…'; }
+    try {
+      var d = await odDossier({ interactif: true });
+      if (!d.ok) { alert('❌ ' + d.error); return; }
+      var l = await odLire(d.dossier, OD.PREF_POSTE);
+      var s = await odLire(d.dossier, OD.PREF_STATS);
+      lsSet(OD.LS_FLOTTE, JSON.stringify(flotteConstruire(fusionnerPostes(l.fichiers).postes, s.fichiers)));
+    } catch (e) {
+      alert('❌ Lecture du dossier impossible : ' + (e && e.message ? e.message : e));
+    } finally {
+      try { if (typeof root.statsRender === 'function') root.statsRender(); } catch (e) { /* */ }
+    }
+  };
+
+  /* ═════════════ 6. DÉCODEUR : AIDE À LA DESCRIPTION ═════════════ */
+  var CRITERES = [
+    { k: 'appareil', lbl: 'Appareil', conseil: "Précisez la marque et le type d'appareil (robot, aspirateur balai, cafetière…)." },
+    { k: 'modele', lbl: 'Modèle', conseil: "Ajoutez le modèle exact (étiquette sous l'appareil ou fiche dans l'application) : procédure et liens seront ciblés." },
+    { k: 'symptome', lbl: 'Symptôme', conseil: "Dites ce que l'appareil fait ou ne fait plus, avec un verbe : ne charge plus, s'arrête en cours, n'aspire plus…" },
+    { k: 'moment', lbl: 'Depuis quand', conseil: 'Indiquez depuis quand, ou après quel événement : mise à jour, chute, changement de box, nettoyage…' },
+    { k: 'signal', lbl: 'Code ou voyant', conseil: 'Notez le code, le message vocal ou la couleur du voyant : c’est souvent ce qui tranche.' },
+    { k: 'essaye', lbl: 'Déjà essayé', conseil: 'Listez ce qui a déjà été tenté, pour ne pas le refaire faire au client.' }
+  ];
+  var RX = {
+    appareil: /robot|aspirateur|laveu|balai|station|cafeti|expresso|friteuse|centrale|\bfer\b|s[èe]che|mixeur|blender|cuiseur|bouilloire|grille|tondeuse|nettoyeur/i,
+    symptome: /\b(ne|n['’])\s*[a-zà-ÿ]+|\bplus\b|\bpas\b|bloqu|erreur|bruit|fui|s['’]arr[êe]t|arr[êe]t|chauff|charg|aspir|connect|appair|tourn|vid|traces?|odeur|coinc|recul|perd|clignot|allum|d[ée]marr|lav|coul|saute|patin/i,
+    vague: /\b(marche|fonctionne)\s+(plus|pas)\b|\bhs\b|en panne|ne va (plus|pas)|probl[èe]me/i,
+    moment: /depuis|apr[èe]s|suite [àa]|hier|ce matin|semaines?|jours?|\bmois\b|mise [àa] jour|chute|choc|d[ée]m[ée]nag|changement|nouvelle box|premi[èe]re utilisation|r[ée]cemment|toujours/i,
+    signal: /\b(e|er|err)\s?-?\d{1,3}\b|\berreur\b|\bcode\b|message|vocal|voyant|clignot|\bbip|affiche|alerte|notification/i,
+    /* participes passés uniquement (« nettoyé », pas « nettoyage ») ; « é » n'est pas une lettre pour \b */
+    essaye: /essay|red[ée]marrée?s?(?![a-zà-ÿ])|\breset\b|r[ée]initialis[ée]{1,2}s?(?![a-zà-ÿ])|nettoy[ée]{1,2}s?(?![a-zà-ÿ])|chang[ée]{1,2}s?(?![a-zà-ÿ])|remplac[ée]{1,2}s?(?![a-zà-ÿ])|v[ée]rifi[ée]{1,2}s?(?![a-zà-ÿ])|test[ée]{1,2}s?(?![a-zà-ÿ])|(?:d[ée]|re)branch[ée]{1,2}s?(?![a-zà-ÿ])|vid[ée]\s+(le|la|les)\b|d[ée]j[àa] fait|rien pour l/i
+  };
+  var MSG_VAGUE = "« Ne marche plus » est trop vague : dites ce que l'appareil fait ou ne fait plus (ne charge plus, ne s'allume plus, s'arrête en cours…).";
+
+  function evaluer(texte, ctx) {
+    ctx = ctx || {};
+    var t = String(texte || ''), r = {};
+    var marqueSel = ctx.marque && !/^autre$/i.test(String(ctx.marque)) ? String(ctx.marque) : '';
+    var notice = null;
+    try { if (typeof root.ovpemNoticeResoudre === 'function') notice = root.ovpemNoticeResoudre(t, { marque: marqueSel }); } catch (e) { notice = null; }
+    var sansVague = t.replace(new RegExp(RX.vague.source, 'gi'), ' ').replace(/\s+/g, ' ').trim();
+    var vague = RX.vague.test(t) && sansVague.length < 30;
+    r.appareil = !!marqueSel || !!(notice && (notice.marque || notice.marqueLibre)) || RX.appareil.test(t);
+    r.modele = !!(notice && notice.modele);
+    r.symptome = t.trim().length >= 12 && RX.symptome.test(t) && !vague;
+    r.moment = RX.moment.test(t);
+    r.signal = !!(ctx.code && String(ctx.code).trim()) || RX.signal.test(t);
+    r.essaye = RX.essaye.test(t);
+    var criteres = CRITERES.map(function (c) { return { k: c.k, lbl: c.lbl, ok: !!r[c.k] }; });
+    var manque = CRITERES.filter(function (c) { return !r[c.k]; })[0];
+    var conseil = !t.trim() ? "Décrivez le problème avec les mots du client, ou ouvrez l'aide pour compléter la phrase type."
+      : (vague ? MSG_VAGUE : (manque ? manque.conseil : "Description complète : l'analyse sera précise."));
+    return {
+      criteres: criteres, score: criteres.filter(function (c) { return c.ok; }).length, total: CRITERES.length,
+      conseil: conseil, vague: vague,
+      marque: notice && notice.marque ? notice.marque.nom : '', modele: notice ? (notice.modele || '') : ''
+    };
+  }
+  function composer(c) {
+    c = c || {};
+    var net = function (s) { return String(s || '').replace(/\s+/g, ' ').trim().replace(/[.;,\s]+$/, ''); };
+    var parts = [];
+    var tete = [net(c.appareil), net(c.symptome)].filter(Boolean).join(' — ');
+    var moment = net(c.moment);
+    if (tete) parts.push(tete + (moment ? ' ' + moment : ''));
+    else if (moment) parts.push(moment.charAt(0).toUpperCase() + moment.slice(1));
+    if (net(c.signal)) parts.push('Code, message ou voyant : ' + net(c.signal));
+    if (net(c.essaye)) parts.push('Déjà essayé : ' + net(c.essaye));
+    if (net(c.frequence)) parts.push('Se produit : ' + net(c.frequence));
+    var phrase = parts.length ? parts.join('. ') + '.' : '';
+    return phrase ? phrase.charAt(0).toUpperCase() + phrase.slice(1) : '';
+  }
+
+  var CHAMPS = [
+    { k: 'appareil', lbl: 'Appareil et modèle', ph: 'Ex : Dreame L40 Ultra', chips: [] },
+    { k: 'symptome', lbl: 'Ce qui se passe', ph: "Ex : ne se connecte plus à l'application", req: true,
+      chips: ['ne charge plus', "ne se connecte plus à l'application", "n'aspire plus", "ne lave plus, pas d'eau", 'fait un bruit anormal', "s'arrête en cours de nettoyage", 'ne retourne pas à la station', 'la station ne vide plus', 'fuit', "ne s'allume plus", 'ne chauffe plus'] },
+    { k: 'moment', lbl: 'Depuis quand, après quoi', ph: 'Ex : depuis un changement de box',
+      chips: ['depuis une mise à jour', 'depuis un changement de box ou de Wi-Fi', 'après un nettoyage', 'après une chute ou un choc', 'depuis quelques jours', 'dès la première utilisation'] },
+    { k: 'signal', lbl: 'Code, message ou voyant', ph: 'Ex : message « échec de connexion »',
+      chips: ["code erreur dans l'application", 'message vocal', 'voyant rouge', 'voyant qui clignote', 'bip répété', 'aucun message'] },
+    { k: 'essaye', lbl: 'Déjà essayé', ph: "Ex : redémarré l'appareil",
+      chips: ["redémarré l'appareil", 'nettoyé brosses et filtre', 'vérifié le Wi-Fi 2,4 GHz', 'réinitialisé', "rien pour l'instant"] },
+    { k: 'frequence', lbl: 'Quand ça se produit', ph: 'Ex : à chaque tentative',
+      chips: ['à chaque utilisation', 'de temps en temps', 'sur les tapis', 'en fin de cycle', 'au démarrage'] }
+  ];
+  var AIDE_MODES = {
+    atelier: { ico: '🔧', titre: "À relever avant d'analyser",
+      items: ["Référence exacte et numéro de série (étiquette sous l'appareil)", "Version du micrologiciel et historique d'erreurs dans l'application", 'Tests déjà faits et leur résultat (rotation à la main, contacts, tension…)', 'Pièces déjà remplacées'],
+      exemple: 'Roborock S8 Pro Ultra — erreur 13 à la charge depuis une semaine. Contacts nettoyés, voyant de station éteint robot posé. Déjà essayé : autre prise, réinitialisation.' },
+    magasin: { ico: '🏪', titre: 'À observer au comptoir',
+      items: ["Ce que fait l'appareil à l'allumage : voyant, son, message", 'État visible : brosses, filtre, roues, bac, station', 'Ce que le client a déjà essayé', 'Depuis quand, et après quel événement'],
+      exemple: 'Dreame L40 Ultra — ne retourne plus à la station depuis un déménagement. Voyant de la station allumé. Déjà essayé : station replacée contre un mur.' },
+    hotline: { ico: '📞', titre: 'Questions à poser au client',
+      items: ["Quel est le modèle exact ? (étiquette sous l'appareil ou dans l'application)", "Que dit l'appareil ou l'application ? (code, message, couleur du voyant)", 'Depuis quand, et après quel événement ?', "Qu'avez-vous déjà essayé ?"],
+      exemple: "Ecovacs Deebot T50 Pro Omni — le client n'arrive pas à connecter le robot à l'application depuis un changement de box. Message « échec de connexion ». Déjà essayé : redémarrer le robot." },
+    rcd: { ico: '📞', titre: 'Questions à poser au client (comptoir distant)',
+      items: ["Êtes-vous à côté de l'appareil ? (pour le guider pas à pas)", "Quel est le modèle exact ? (étiquette sous l'appareil ou dans l'application)", "Que dit l'appareil ou l'application ? (code, message, couleur du voyant)", "Depuis quand, et qu'avez-vous déjà essayé ?"],
+      exemple: "Mova P50 Pro Ultra — la station ne vide plus le bac depuis quelques jours, bip répété au retour à la base. Déjà essayé : vider le bac. Le client est à côté de l'appareil." }
+  };
+  var VAGUE_EX = 'il marche plus';
+
+  function modeCourant() {
+    try { if (root.OVD && typeof root.OVD.getMode === 'function') return root.OVD.getMode(); } catch (e) { /* */ }
+    return 'atelier';
+  }
+  function champsHtml() {
+    return '<div class="ovd-aide-intro">Complétez ce que vous savez, puis écrivez la description : plus elle est précise, plus la solution est directe.</div>' +
+      '<div class="ovd-aide-grid">' + CHAMPS.map(function (c) {
+        var chips = c.chips.length ? '<div class="ovd-chips" role="group" aria-label="Suggestions : ' + esc(c.lbl) + '">' + c.chips.map(function (v) {
+          return '<button type="button" class="ovd-chip" data-cible="ovdA-' + c.k + '" data-val="' + esc(v) + '" aria-pressed="false" onclick="ovdAide.chip(this)">' + esc(v) + '</button>';
+        }).join('') + '</div>' : '';
+        return '<div class="ovd-aide-champ"><label class="ovd-field-label" for="ovdA-' + c.k + '">' + esc(c.lbl) + (c.req ? ' <span class="opt">(essentiel)</span>' : '') + '</label>' +
+          '<input id="ovdA-' + c.k + '" class="ovd-input" autocomplete="off" placeholder="' + esc(c.ph) + '">' + chips + '</div>';
+      }).join('') + '</div>' +
+      '<div class="ovd-aide-apercu"><b>Aperçu</b><span id="ovdA-apercu">…</span></div>' +
+      '<div class="ovd-aide-actions"><button type="button" class="ovd-btn ovd-btn-ecrire" onclick="ovdAide.ecrire()">✍️ Écrire dans le verbatim</button>' +
+      '<button type="button" class="ovd-btn" onclick="ovdAide.vider()">Vider les champs</button></div>' +
+      '<div class="ovd-aide-mode" id="ovdA-mode"></div>';
+  }
+  function modeHtml(m) {
+    var d = AIDE_MODES[m] || AIDE_MODES.atelier;
+    return '<div class="ovd-aide-mode-t">' + d.ico + ' ' + esc(d.titre) + '</div><ol>' +
+      d.items.map(function (i) { return '<li>' + esc(i) + '</li>'; }).join('') + '</ol>' +
+      '<div class="ovd-aide-ex"><span class="ko">❌ Trop vague : « ' + esc(VAGUE_EX) + ' »</span><span class="bon">✅ Efficace : ' + esc(d.exemple) + '</span></div>';
+  }
+  function valeurs() {
+    var o = {};
+    CHAMPS.forEach(function (c) { var el = doc && doc.getElementById('ovdA-' + c.k); o[c.k] = el ? el.value : ''; });
+    return o;
+  }
+  function titre(s) { s = String(s || '').toLowerCase(); return s.replace(/(^|[\s-])([a-zà-ÿ])/g, function (m, a, b) { return a + b.toUpperCase(); }); }
+  function synchroChips(input) {
+    if (!doc || !input) return;
+    var v = input.value.toLowerCase();
+    doc.querySelectorAll('.ovd-chip[data-cible="' + input.id + '"]').forEach(function (b) {
+      var on = v.indexOf(String(b.getAttribute('data-val')).toLowerCase()) !== -1;
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  }
+
+  var aide = {
+    _lie: false, _t: null,
+    init: function () {
+      if (!doc) return;
+      var panel = doc.getElementById('ovd-aide-panel');
+      if (panel && !panel.getAttribute('data-pret')) {
+        panel.innerHTML = champsHtml();
+        panel.setAttribute('data-pret', '1');
+        CHAMPS.forEach(function (c) {
+          var el = doc.getElementById('ovdA-' + c.k);
+          if (el) el.addEventListener('input', function () { synchroChips(el); aide.apercu(); });
+        });
+      }
+      if (!this._lie) {
+        this._lie = true;
+        ['ovd-verbatim', 'ovd-code'].forEach(function (id) {
+          var el = doc.getElementById(id);
+          if (el) el.addEventListener('input', function () { aide.planifier(); });
+        });
+        var sel = doc.getElementById('ovd-marque');
+        if (sel) sel.addEventListener('change', function () { aide.maj(); });
+      }
+      this.modeChange(modeCourant());
+      this.maj();
+    },
+    planifier: function () { clearTimeout(this._t); this._t = setTimeout(function () { aide.maj(); }, 150); },
+    maj: function () {
+      if (!doc) return;
+      var ta = doc.getElementById('ovd-verbatim'), q = doc.getElementById('ovd-qualite'), c = doc.getElementById('ovd-aide-conseil');
+      if (!ta || !q) return;
+      var sel = doc.getElementById('ovd-marque'), code = doc.getElementById('ovd-code');
+      var ev = evaluer(ta.value, { marque: sel ? sel.value : '', code: code ? code.value : '' });
+      q.innerHTML = '<span class="ovd-q-score">Précision ' + ev.score + '/' + ev.total + '</span>' + ev.criteres.map(function (k) {
+        return '<span class="ovd-q-pill' + (k.ok ? ' ok' : '') + '" title="' + esc(k.ok ? 'Renseigné' : 'À préciser') + '">' + (k.ok ? '✓ ' : '○ ') + esc(k.lbl) + '</span>';
+      }).join('');
+      if (c) c.textContent = '💡 ' + ev.conseil;
+      return ev;
+    },
+    basculer: function () {
+      if (!doc) return;
+      var p = doc.getElementById('ovd-aide-panel'), b = doc.getElementById('ovd-aide-btn');
+      if (!p) return;
+      this.init();
+      var ouvrir = p.hidden;
+      p.hidden = !ouvrir;
+      if (b) b.setAttribute('aria-expanded', ouvrir ? 'true' : 'false');
+      if (ouvrir) {
+        var ap = doc.getElementById('ovdA-appareil');
+        if (ap && !ap.value.trim()) {
+          var sel = doc.getElementById('ovd-marque'), ta = doc.getElementById('ovd-verbatim');
+          var m = sel && sel.value && !/^autre$/i.test(sel.value) ? sel.value : '';
+          var ev = evaluer(ta ? ta.value : '', { marque: m });
+          ap.value = [m ? titre(m) : ev.marque, ev.modele].filter(Boolean).join(' ');
+        }
+        this.apercu();
+        var s = doc.getElementById('ovdA-symptome');
+        if (s) s.focus();
+      }
+    },
+    chip: function (btn) {
+      if (!doc || !btn) return;
+      var input = doc.getElementById(btn.getAttribute('data-cible'));
+      if (!input) return;
+      var v = String(btn.getAttribute('data-val'));
+      var parts = input.value.split(',').map(function (x) { return x.trim(); }).filter(Boolean);
+      var i = parts.map(function (x) { return x.toLowerCase(); }).indexOf(v.toLowerCase());
+      if (i === -1) parts.push(v); else parts.splice(i, 1);
+      input.value = parts.join(', ');
+      synchroChips(input);
+      this.apercu();
+    },
+    apercu: function () {
+      var el = doc && doc.getElementById('ovdA-apercu');
+      if (el) el.textContent = composer(valeurs()) || '…';
+    },
+    ecrire: function () {
+      if (!doc) return;
+      var v = valeurs();
+      if (!String(v.symptome || '').trim()) {
+        var s = doc.getElementById('ovdA-symptome');
+        if (s) { s.focus(); s.classList.add('ovd-requis'); setTimeout(function () { s.classList.remove('ovd-requis'); }, 1600); }
+        return;
+      }
+      var t = composer(v), ta = doc.getElementById('ovd-verbatim');
+      if (!ta) return;
+      ta.value = ta.value.trim() ? ta.value.replace(/\s+$/, '') + '\n' + t : t;
+      ta.focus();
+      this.maj();
+    },
+    vider: function () {
+      if (!doc) return;
+      CHAMPS.forEach(function (c) { var el = doc.getElementById('ovdA-' + c.k); if (el) { el.value = ''; synchroChips(el); } });
+      this.apercu();
+    },
+    modeChange: function (m) {
+      var box = doc && doc.getElementById('ovdA-mode');
+      if (box) box.innerHTML = modeHtml(m);
+    },
+    evaluer: evaluer,
+    composer: composer
+  };
+  root.ovdAide = aide;
+
+  /* ═════════════ 7. DÉMARRAGE ═════════════ */
+  if (doc && doc.addEventListener) {
+    var demarrer = function () {
+      setTimeout(function () { verifierReprise().catch(function () { /* */ }); }, 2500);
+      setInterval(function () { if (provActif() === 'onedrive') extrasEtat(); }, 60000);
+    };
+    if (doc.readyState === 'loading') doc.addEventListener('DOMContentLoaded', demarrer); else demarrer();
+  }
+
+  var api = {
+    OD: OD, EXTRAS: EXTRAS, extrasEtat: extrasEtat, extrasConstruire: extrasConstruire, extrasFusionner: extrasFusionner,
+    extrasAppliquer: extrasAppliquer, fusionnerPostes: fusionnerPostes, flotteConstruire: flotteConstruire,
+    indicateurs: indicateurs, nomPoste: nomPoste, nomStats: nomStats, evaluer: evaluer, composer: composer,
+    SyncProviderOneDrive: SyncProviderOneDrive, _utiliserDossier: odUtiliserDossier, _verifierReprise: verifierReprise
+  };
+  root.OVPEM_V302 = api;
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+})(typeof window !== 'undefined' ? window : globalThis);
+</script>
+
+<!-- ═══════════ V3.01 — LIENS DIRECTS NOTICE & APPLICATION + PHRASE D'ACCUEIL (profil RCD) ═══════════ -->
+<style id="ovn-css">
+.ovn-accueil{margin:0 0 14px;padding:12px 14px;border-left:4px solid #f59e0b;border-radius:8px;background:rgba(245,158,11,.10);color:var(--text,#dde3f0)}.ovn-accueil-novice{display:none}body.profile-novice .ovn-accueil-novice{display:block}.ovn-accueil-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}.ovn-accueil-lbl{font:700 12.5px/1.3 "DM Sans",system-ui,sans-serif;color:#fbbf24}.ovn-accueil-txt{margin:0;font:500 14.5px/1.55 "DM Sans",system-ui,sans-serif;max-width:80ch}.ovn-panel{margin:12px 0 4px;border:1px solid var(--border,#253047);border-radius:10px;background:var(--surface2,#1e2940);color:var(--text,#dde3f0)}.ovn-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;padding:10px 14px;cursor:pointer;list-style:none}.ovn-head::-webkit-details-marker{display:none}.ovn-head::before{content:"\25B8";color:#fbbf24;font-size:11px;transition:transform .15s}.ovn-panel[open]>.ovn-head::before{transform:rotate(90deg)}.ovn-title{font:700 14px/1.3 "DM Sans",system-ui,sans-serif;color:#fbbf24}.ovn-ctx{font:500 12px/1.3 "DM Sans",system-ui,sans-serif;color:var(--text2,#8b99b8)}.ovn-grp{margin:0 14px 8px}.ovn-grp-t{font:700 11.5px/1.3 "DM Sans",system-ui,sans-serif;color:var(--text2,#8b99b8);margin:6px 0 3px}.ovn-list{list-style:none;margin:0;padding:0}.ovn-li{display:flex;align-items:center;gap:8px;padding:3px 0}.ovn-li::before{content:"";flex:none;width:7px;height:7px;border-radius:50%;background:#6b7a99}.ovn-officiel::before{background:#34d399}.ovn-notice::before{background:#60a5fa}.ovn-video::before{background:#f87171}.ovn-images::before{background:#fbbf24}.ovn-a{flex:1;min-width:0;color:#fcd34d;font:500 13px/1.4 "DM Sans",system-ui,sans-serif;text-decoration:none;overflow-wrap:anywhere}.ovn-a:hover{text-decoration:underline}.ovn-a:focus-visible,.ovn-copy:focus-visible,.ovn-head:focus-visible{outline:2px solid #f59e0b;outline-offset:2px;border-radius:3px}.ovn-copy{flex:none;padding:2px 9px;border:1px solid var(--border2,#2e3a54);border-radius:6px;background:transparent;color:var(--text,#dde3f0);font:600 11px/1.6 "DM Sans",system-ui,sans-serif;cursor:pointer}.ovn-copy:hover{border-color:#f59e0b}.ovn-note{margin:4px 14px 10px;font:400 11px/1.4 "DM Sans",system-ui,sans-serif;color:var(--text2,#8b99b8)}.ovn-proc{margin:0 0 10px;padding:10px 12px;border-radius:8px;border:1px solid rgba(96,165,250,.35);background:rgba(59,130,246,.08)}.ovn-proc-t{font:700 13px/1.3 "DM Sans",system-ui,sans-serif;color:var(--text,#dde3f0);margin-bottom:6px}.ovn-proc-list{margin:0 0 0 20px;padding:0;font-size:13px;line-height:1.55;color:var(--text,#dde3f0)}.ovn-proc-list li{margin:2px 0}.ovn-proc-illu{margin-top:6px;font-size:12px;color:var(--text2,#8b99b8)}.ovn-proc-lbl{color:#93c5fd}.light .ovn-accueil{background:#fff4de;color:#1a2236}.light .ovn-accueil-lbl,.light .ovn-title{color:#8a4b00}.light .ovn-head::before{color:#8a4b00}.light .ovn-panel{background:#ffffff;color:#1a2236}.light .ovn-ctx,.light .ovn-grp-t,.light .ovn-note,.light .ovn-proc-illu{color:#4a5978}.light .ovn-a{color:#8a4b00}.light .ovn-copy{color:#1a2236}.light .ovn-proc{background:#eef4ff}.light .ovn-proc-t,.light .ovn-proc-list{color:#1a2236}.light .ovn-proc-lbl{color:#1d4ed8}@media print{.ovn-accueil,.ovn-copy{display:none!important}.ovn-panel{border-color:#999}.ovn-a{color:#000}}
+.profile-chip .pc-main{white-space:nowrap;}
+.profile-chip .pc-sub{display:block;font-size:9.5px;font-weight:600;opacity:.8;letter-spacing:.02em;}
+</style>
+<script>
+/* ═══════════════════════════════════════════════════════════════════════
+   OVPEM V3.01 — Module « Liens directs notice & application » (12 marques)
+   - OVPEM_NOTICES : URL constructeur vérifiées le 15/09/2026 (aucune URL
+     supposée ; les liens dynamiques sont des recherches filtrées).
+   - ovpemNoticeResoudre(texte, {marque, modele}) : marque + modèle + sujet
+   - ovpemNoticePanelHtml(res) : panneau de liens cliquables (+ copier)
+   - ovpemNoticePromptBloc(res) : consigne à ajouter au prompt Copilot
+   - ovpemAccueilBandeauHtml() : phrase d'accueil client (profil RCD)
+   Fragments #:~:text= : ouvrent la page à l'étape concernée (Chrome/Edge).
+   ═══════════════════════════════════════════════════════════════════════ */
+(function (root) {
+  'use strict';
+
+  var VERIF = '15/09/2026';
+  var OVPEM_PROFIL_RCD_LABEL = 'Magasin/Hotline/RCD Guidage rapide IA';
+  var OVPEM_PHRASE_ACCUEIL = "Vous avez bien fait de nous contacter, nous allons procéder à un diagnostic de votre appareil. D'après notre expérience sur ce type de robot, il est souvent possible de résoudre des dysfonctionnements à distance, sans que vous ayez besoin de vous déplacer en magasin. Cela permet d'éviter l'immobilisation de votre appareil et de vous apporter une solution plus rapidement.";
+
+  function G(t, u, f) { return { t: t, u: u, f: f || '' }; }
+
+  /* ── Sujets : détection par mots-clés (ordre = priorité) ── */
+  var SUJETS = [
+    { k: 'wifi', label: 'Appairage / connexion Wi-Fi', z: 'Wi-Fi',
+      re: /appair|associ(er|ation)|jumel|connect|wi-?fi|wlan|r[ée]seau|hotspot|point d.acc[èe]s|bluetooth|qr ?code|ajouter (un |l.|mon |le )?(appareil|robot)|hors[ -]?ligne|offline|2[,.]4 ?ghz/i,
+      q: 'connexion Wi-Fi application appairage' },
+    { k: 'carte', label: 'Carte / pièces / zones interdites', z: 'carte',
+      re: /\bcartes?\b|cartograph|mur virtuel|limites? virtuelles?|zones? (interdites?|à éviter|a eviter)|no[ -]?go|diviser|fusionner|renommer|[ée]tages?\b/i,
+      q: 'carte cartographie zones interdites application' },
+    { k: 'prog', label: 'Programmation / planning', z: 'programmer',
+      re: /program|planning|planifi|horaire|calendrier|ne pas d[ée]ranger|sc[ée]nario/i,
+      q: 'programmer nettoyage planning application' },
+    { k: 'maj', label: 'Mise à jour du micrologiciel', z: 'mise à jour',
+      re: /mise [àa] jour|mettre [àa] jour|firmware|micrologiciel|\bupdate\b|\bota\b/i,
+      q: 'mise à jour micrologiciel firmware' },
+    { k: 'reset', label: 'Réinitialisation', z: 'réinitialiser',
+      re: /r[ée]initialis|\breset\b|param[èe]tres? d.usine|factory/i,
+      q: 'réinitialisation Wi-Fi paramètres usine' },
+    { k: 'partage', label: "Partage de l'appareil / compte", z: 'partager',
+      re: /partag|autre (t[ée]l[ée]phone|compte|utilisateur)|membres? de la famille|changer de compte/i,
+      q: 'partager appareil compte application' },
+    { k: 'vocal', label: 'Assistant vocal', z: 'Alexa',
+      re: /alexa|google (home|assistant)|\bsiri\b|assistant vocal|commande vocale/i,
+      q: 'Alexa Google Assistant association' },
+    { k: 'charge', label: 'Charge / retour à la base', z: 'charge',
+      re: /ne (se )?(re)?charge (plus|pas)|probl[èe]me de charge|batterie|retour(ne)? (pas )?(à|a) (la )?(base|station)/i,
+      q: 'ne charge pas station de charge' },
+    { k: 'station', label: 'Station / auto-vidage / réservoirs', z: 'station',
+      re: /station|vidage|auto[- ]?vid|r[ée]servoir|eau (sale|propre)|\bsac\b/i,
+      q: 'station vidage réservoir' },
+    { k: 'lavage', label: "Lavage / serpillière / débit d'eau", z: 'serpillière',
+      re: /lavage|laver|serpill|\bmop\b|d[ée]bit d.eau|patin/i,
+      q: 'lavage serpillière débit eau' },
+    { k: 'entretien', label: 'Entretien / consommables', z: 'entretien',
+      re: /entretien|filtre|brosse|capteur|consommable|remplac/i,
+      q: 'entretien nettoyage filtre brosse' },
+    { k: 'erreur', label: "Code / message d'erreur", z: 'erreur',
+      re: /erreur|\be\d{1,3}\b|alerte|voyant (rouge|clignot)/i,
+      q: 'code erreur signification solution' }
+  ];
+
+  /* ── Registre constructeurs (URL vérifiées) ── */
+  var EF = function (slug, pid) {
+    return function (id, t, f) {
+      return G(t, 'https://help.ecovacs.com/fr/support/' + slug + '/faq-detail?id=' + id + '&product_id=' + pid, f);
+    };
+  };
+  var T50P = EF('deebot-t50-pro-omni', 378);
+  // Ecovacs FR : fiches produit relevées sur l'index officiel help.ecovacs.com/fr/support
+  var ECP = 'https://help.ecovacs.com/fr/support/';
+  function EP(re, nom, slug) { return { re: re, nom: nom, page: ECP + slug }; }
+
+  // Dreame FR : fiche modèle (notice + vidéos tutoriels + dépannage) et article notice
+  var DRZ = 'https://dreametech.zendesk.com/hc/fr/';
+  function DR(re, nom, section, article) {
+    var e = { re: re, nom: nom, notices: [G('Notice ' + nom + ' (PDF officiel)', DRZ + 'articles/' + article)] };
+    if (section) { e.page = DRZ + 'sections/' + section; e.pageT = 'Fiche assistance ' + nom + ' (Dreame FR)'; }
+    return e;
+  }
+  // MOVA FR : page produit + notice (page officielle des manuels, positionnée sur le modèle)
+  var MVM = 'https://fr.mova.tech/pages/user-manuals-and-faqs';
+  function MV(re, nom, slug) {
+    return { re: re, nom: 'MOVA ' + nom, page: 'https://fr.mova.tech/products/' + slug, pageT: 'Fiche produit MOVA ' + nom + ' (officielle)',
+      notices: [G('Notice MOVA ' + nom + ' (page des manuels, tuile du modèle)', MVM, [nom, 'Télécharger'])] };
+  }
+
+  var MARQUES = {
+    ecovacs: {
+      nom: 'Ecovacs', app: 'ECOVACS HOME', re: /ecovacs|deebot|winbot/i, sites: ['ecovacs.com'],
+      support: 'https://help.ecovacs.com/fr/support',
+      recherche: 'https://help.ecovacs.com/fr/support/search?word=',
+      contact: G('Service client Ecovacs France : 0805 111 510, service-fr@ecovacs.com', 'https://help.ecovacs.com/fr/support/contact-us'),
+      youtube: 'https://www.youtube.com/channel/UC-m7kdVguWnNVapvTXVdx_Q',
+      appli: G('Application ECOVACS HOME (fonctions, téléchargement)', 'https://help.ecovacs.com/fr/support/ecovacs-home-app'),
+      sujets: {
+        wifi: [
+          G('Connexion Wi-Fi par QR code (DEEBOT récents)', 'https://help.ecovacs.com/fr/support/faq-detail?id=1759', 'Scannez le code QR du robot'),
+          G('Connexion initiale par bouton RESET (DEEBOT)', 'https://help.ecovacs.com/fr/support/app-wifi-connection/initial-robot-connection', 'Activez le Wi-Fi du robot'),
+          G('Échec de connexion Wi-Fi : diagnostic officiel', 'https://help.ecovacs.com/fr/support/app-wifi-connection/troubleshooting-for-home-wi-fi-connection-failure')
+        ],
+        carte: [G('Cartographie et limites virtuelles dans ECOVACS HOME', 'https://help.ecovacs.com/fr/support/ecovacs-home-app')]
+      },
+      modeles: [
+        { re: /t50\s*max\s*pro.*gen\s*2/i, nom: 'DEEBOT T50 MAX PRO OMNI Gen2', page: 'https://help.ecovacs.com/fr/support/deebot-t50-max-pro-omni-gen2' },
+        EP(/t50\s*max\s*pro/i, 'DEEBOT T50 MAX PRO OMNI', 'deebot-t50-max-pro-omni'),
+        { re: /t50\s*pro.*gen\s*3/i, nom: 'DEEBOT T50 PRO OMNI Gen3', page: 'https://help.ecovacs.com/fr/support/deebot-t50-pro-omni-gen3' },
+        { re: /t50\s*pro/i, nom: 'DEEBOT T50 PRO OMNI', page: 'https://help.ecovacs.com/fr/support/deebot-t50-pro-omni',
+          notices: [
+            G('Notice DEEBOT T50 PRO OMNI (EU, PDF)', 'https://site-static.ecovacs.com/upload/file/support/2025/03/28/092216_7358$DEEBOTT50PROOMNIInstructionManual-EU.pdf'),
+            G('Notice DEEBOT T50 PRO OMNI Gen2 (EMEA, PDF)', 'https://site-static.ecovacs.com/upload/file/support/2025/10/23/075848_2370$DEEBOTT50PROOMNIGEN2InstructionManual-EMEA.pdf'),
+            G('Notice T50 PRO OMNI remplissage/vidange auto (EU, PDF)', 'https://site-static.ecovacs.com/upload/file/support/2025/03/28/092656_7265$DEEBOTT50PROOMNIwithAutoRefillandDrainInstructionManual-EU.pdf')
+          ],
+          sujets: {
+            wifi: [T50P(1682, 'Guide de connexion au réseau : T50 PRO OMNI', 'Connexion réseau'), T50P(1678, 'Ajouter d\'autres réseaux Wi-Fi : T50 PRO OMNI')],
+            carte: [T50P(1674, 'Créer une nouvelle carte : T50 PRO OMNI'), T50P(1702, 'Guide de cartographie : T50 PRO OMNI'), T50P(1677, 'Définir des limites virtuelles : T50 PRO OMNI'), T50P(1685, 'Anomalies de carte (inclinaison, chevauchement)')],
+            prog: [T50P(1676, 'Planifier une tâche de nettoyage : T50 PRO OMNI'), T50P(1675, 'Configurer un scénario de nettoyage'), T50P(1686, "Le nettoyage programmé ne s'est pas lancé")],
+            maj: [T50P(1679, 'Mettre à niveau le micrologiciel : T50 PRO OMNI')],
+            charge: [T50P(1704, 'Le robot ne charge pas : T50 PRO OMNI'), T50P(1705, 'Guide de chargement du robot')],
+            station: [T50P(1680, 'Fonctions de la station'), T50P(1692, 'Installer / retirer la base de la station'), T50P(1691, 'Nettoyer le bac de nettoyage'), T50P(1688, "La station ne fournit pas d'eau chaude"), T50P(1703, 'Remplacer le sac à poussière')],
+            lavage: [T50P(1701, 'Démarrer une tâche de lavage'), T50P(1684, "L'eau ne sort pas du réservoir d'eau propre"), T50P(1695, 'Plaque et patins de lavage : démontage et pose'), T50P(1671, 'Nettoyage dans le sens du sol')],
+            entretien: [T50P(1699, 'Brosse principale : démontage et nettoyage'), T50P(1700, 'Brosse latérale : démontage et nettoyage'), T50P(1698, 'Compartiment à poussière : démontage et nettoyage'), T50P(1696, 'Nettoyer les réservoirs eau sale / eau propre'), T50P(1697, 'Nettoyer les capteurs antichute')],
+            erreur: [T50P(1694, 'Alerte « vérifier les roues motrices »'), T50P(1687, 'Anomalie du capteur laser'), T50P(1689, 'Message « Anomalie du bac de nettoyage de la station »'), T50P(1690, "Message « bac rempli d'eau sale »")]
+          } },
+        { re: /t50.*gen\s*3/i, nom: 'DEEBOT T50 OMNI Gen3', page: 'https://help.ecovacs.com/fr/support/deebot-t50-omni-gen3' },
+        { re: /t50.*gen\s*2/i, nom: 'DEEBOT T50 OMNI Gen2', page: 'https://help.ecovacs.com/fr/support/deebot-t50-omni-gen2',
+          sujets: { wifi: [G('Guide de connexion au réseau : T50 OMNI Gen2', 'https://help.ecovacs.com/fr/support/deebot-t50-omni-gen2/faq-detail?id=1718&product_id=473', 'Connexion réseau')] } },
+        { re: /t50/i, nom: 'DEEBOT T50 OMNI', page: 'https://help.ecovacs.com/fr/support/deebot-t50-omni' },
+        EP(/\bt30\s*s\s*combo\s*complete/i, 'DEEBOT T30S COMBO COMPLETE', 'deebot-t30s-combo-complete'),
+        EP(/\bt30\s*s\s*combo/i, 'DEEBOT T30S COMBO', 'deebot-t30s-combo'),
+        EP(/\bt30\s*s\s*pro/i, 'DEEBOT T30S PRO', 'deebot-t30s-pro'),
+        EP(/\bt30\s*s\b/i, 'DEEBOT T30S', 'deebot-t30s'),
+        { re: /t30\s*pro/i, nom: 'DEEBOT T30 PRO OMNI', page: 'https://help.ecovacs.com/fr/support/deebot-t30-pro-omni-rose' },
+        { re: /t30\s*e\b/i, nom: 'DEEBOT T30e OMNI', page: 'https://help.ecovacs.com/fr/support/deebot-t30e-omni' },
+        EP(/\bt30\s*c\b.*gen\s*2/i, 'DEEBOT T30C Gen2', 'deebot-t30c-gen2'),
+        { re: /t30\s*c\b/i, nom: 'DEEBOT T30C', page: 'https://help.ecovacs.com/fr/support/deebot-t30c' },
+        EP(/\bt30\b/i, 'DEEBOT T30 OMNI', 'deebot-t30-omni'),
+        EP(/\bt20\b/i, 'DEEBOT T20 OMNI', 'deebot-t20-omni'),
+        EP(/\bt10\b/i, 'DEEBOT T10', 'deebot-t10'),
+        EP(/\bt9\b/i, 'DEEBOT T9', 'deebot-t9'),
+        EP(/\bt80\s*s\b/i, 'DEEBOT T80S OMNI', 'deebot-t80s-omni'),
+        EP(/\bt80\b/i, 'DEEBOT T80 OMNI', 'deebot-t80-omni'),
+        EP(/\bt90\s*max\s*pro/i, 'DEEBOT T90 MAX PRO OMNI', 'deebot-t90-max-pro-omni'),
+        EP(/\bt90\s*max/i, 'DEEBOT T90 MAX OMNI', 'deebot-t90-max-omni'),
+        EP(/\bt90\s*pro/i, 'DEEBOT T90 PRO OMNI', 'deebot-t90-pro-omni'),
+        EP(/\bt90\b/i, 'DEEBOT T90 OMNI', 'deebot-t90-omni-white'),
+        { re: /n30\s*pro/i, nom: 'DEEBOT N30 PRO OMNI', page: 'https://help.ecovacs.com/fr/support/deebot-n30pro-omni-white' },
+        EP(/\bn20\b/i, 'DEEBOT N20', 'deebot-n20'),
+        EP(/\bn10\b/i, 'DEEBOT N10 PLUS', 'deebot-n10plus'),
+        EP(/\bn8\b.*pro/i, 'DEEBOT N8 PRO', 'n8-pro'),
+        EP(/\bn8\s*(\+|plus)/i, 'DEEBOT N8+', 'n8-plus'),
+        EP(/\bn8\b/i, 'DEEBOT N8', 'n8'),
+        EP(/\bx12\s*s\b.*pro/i, 'DEEBOT X12S PRO OMNI', 'deebot-x12s-pro-omni-white'),
+        EP(/\bx12\s*s\b/i, 'DEEBOT X12S OmniCyclone', 'deebot-x12s-omnicyclone'),
+        EP(/\bx12\b.*pro/i, 'DEEBOT X12 PRO OMNI', 'deebot-x12-pro-omni'),
+        EP(/\bx12\b/i, 'DEEBOT X12 OmniCyclone', 'deebot-x12-omnicyclone'),
+        EP(/\bx11\s*s\b.*pro/i, 'DEEBOT X11S PRO OMNI', 'deebot-x11s-pro-omni'),
+        EP(/\bx11\s*s\b/i, 'DEEBOT X11S OmniCyclone', 'deebot-x11s-omnicyclone'),
+        EP(/\bx11\b.*pro/i, 'DEEBOT X11 PRO OMNI', 'deebot-x11-pro-omni'),
+        EP(/\bx11\b/i, 'DEEBOT X11 OmniCyclone', 'deebot-x11-omnicyclone'),
+        EP(/\bx9\b/i, 'DEEBOT X9 PRO OMNI', 'deebot-x9-pro-omni'),
+        EP(/\bx8\b.*pro/i, 'DEEBOT X8 PRO OMNI', 'deebot-x8-pro-omni'),
+        { re: /\bx8\b/i, nom: 'DEEBOT X8 OMNI', page: 'https://help.ecovacs.com/fr/support/deebot-x8-omni-white' },
+        EP(/\bx5\b.*pro/i, 'DEEBOT X5 PRO OMNI', 'deebot-x5-pro-omni'),
+        EP(/\bx5\b.*hybrid/i, 'DEEBOT X5 HYBRID', 'deebot-x5-hybrid'),
+        EP(/\bx5\b/i, 'DEEBOT X5 OMNI', 'deebot-x5-omni-black'),
+        EP(/\bx2\b.*combo/i, 'DEEBOT X2 COMBO', 'deebot-x2-combo'),
+        EP(/\bx2\b/i, 'DEEBOT X2 OMNI', 'deebot-x2-omni-black'),
+        EP(/\bx1\s*e\b/i, 'DEEBOT X1e OMNI', 'deebot-x1e-omni'),
+        EP(/\bx1\b.*(plus|\+)/i, 'DEEBOT X1 PLUS', 'deebot-x1-plus'),
+        EP(/\bx1\b/i, 'DEEBOT X1 OMNI', 'deebot-x1-omni'),
+        EP(/\bw3\b/i, 'WINBOT W3 OMNI', 'winbot-w3-omni'),
+        EP(/\bw2\s*s\b.*pro.*omni/i, 'WINBOT W2S PRO OMNI', 'winbot-w2s-pro-omni'),
+        EP(/\bw2\s*s\b.*pro/i, 'WINBOT W2S PRO', 'winbot-w2s-pro'),
+        EP(/\bw2\s*s\b.*omni/i, 'WINBOT W2S OMNI', 'winbot-w2s-omni'),
+        EP(/\bw2\s*s\b/i, 'WINBOT W2S', 'winbot-w2s'),
+        EP(/\bw2\b.*pro.*omni/i, 'WINBOT W2 PRO OMNI', 'winbot-w2-pro-omni'),
+        EP(/\bw2\b.*pro/i, 'WINBOT W2 PRO', 'winbot-w2-pro'),
+        EP(/\bw2\b.*omni/i, 'WINBOT W2 OMNI', 'winbot-w2-omni'),
+        EP(/\bw2\b/i, 'WINBOT W2', 'winbot-w2'),
+        EP(/\bw1\b.*pro/i, 'WINBOT W1 PRO', 'winbot-w1-pro'),
+        EP(/winbot\s*mini/i, 'WINBOT MINI', 'winbot-mini'),
+        EP(/\bmini\b/i, 'DEEBOT mini', 'deebot-mini')
+      ]
+    },
+    dreame: {
+      nom: 'Dreame', app: 'Dreamehome', re: /dreame/i, sites: ['dreametech.com', 'dreametech.zendesk.com'],
+      support: 'https://dreametech.zendesk.com/hc/fr',
+      zendesk: 'https://dreametech.zendesk.com/hc/fr/search?query=',
+      appli: G("Dreamehome (manuel électronique et FAQ intégrés à l'app)", 'https://apps.apple.com/fr/app/dreamehome/id1564419343'),
+      sujets: {
+        wifi: [
+          G('Connecter l\'aspirateur-laveur au Wi-Fi (Dreame FR)', 'https://dreametech.zendesk.com/hc/fr/articles/56197316121241-Comment-connecter-votre-aspirateur-et-laveur-robotis%C3%A9-au-Wi-Fi', 'Scanner le QR code sur le robot'),
+          G('Ajout d\'appareil et réseau pas à pas (Dreame, EN)', 'https://support.dreametech.com/hc/en-us/articles/10385413928975-Dreame-Home-APP-Adding-Devices-and-Network-Setup-Made-Easy')
+        ]
+      },
+      modeles: [
+        DR(/l40\s*s\s*pro\s*ultra/i, 'Dreame L40s Pro Ultra', '50605570750873-L40s-Pro-Ultra', '51078725733529-Manuel-d-utilisation-du-L40s-Pro-Ultra'),
+        DR(/l40\s*ultra\s*ae/i, 'Dreame L40 Ultra AE', '50605642838809-L40-Ultra-AE', '51025748830105-Manuel-d-utilisation-du-L40-Ultra-AE'),
+        DR(/l40\s*ultra\s*ce/i, 'Dreame L40 Ultra CE', '50606694939801-L40-Ultra-CE', '51080362946201-Manuel-d-utilisation-du-L40-Ultra-CE'),
+        DR(/l40\s*ultra/i, 'Dreame L40 Ultra', '50605566331929-L40-Ultra', '51026951612825-Manuel-d-utilisation-du-L40-Ultra'),
+        DR(/x50\s*ultra/i, 'Dreame X50 Ultra Complete', '50605358926745-X50-Ultra-Complete', '51080683966361-Manuel-d-utilisation-du-X50-Ultra-Complete')
+      ]
+    },
+    mova: {
+      nom: 'MOVA', app: 'MOVAhome', re: /\bmova/i, sites: ['mova.tech', 'mova-tech.com'],
+      support: 'https://fr.mova.tech/pages/user-manuals-and-faqs',
+      notices: G("Manuels d'utilisation et FAQ MOVA (officiel)", 'https://fr.mova.tech/pages/user-manuals-and-faqs'),
+      appli: G('Application MOVAhome (téléchargement)', 'https://fr.mova.tech/pages/movahome-app-download'),
+      contact: G('SAV MOVA France : 0800 969 983, aftersales@mova-tech.com', 'https://fr.mova.tech/pages/contact'),
+      youtube: 'https://www.youtube.com/@MovaEurope',
+      sujets: {},
+      modeles: [
+        MV(/^v70/i, 'V70 Ultra Complete', 'v70-ultra-complete-robot-aspirateur'),
+        MV(/^z70/i, 'Z70 Ultra Roller Complete', 'mova-z70-ultra-roller-complete-robot-aspirateur-effet-pierre'),
+        MV(/mobius\s*60/i, 'MOBIUS 60', 'mobius-60-aspirateur-robot'),
+        MV(/^z60.*standalone/i, 'Z60 Ultra Roller Standalone', 'z60-ultra-roller-standalone-aspirateur-robot'),
+        MV(/^z60/i, 'Z60 Ultra Roller Complete', 'mova-z60-ultra-roller-complete-aspirateur-robot'),
+        MV(/^s70\s*ultra/i, 'S70 Ultra Roller', 's70-ultra-roller-robot-aspirateur-noir'),
+        MV(/^s70/i, 'S70 Roller', 's70-roller-aspirateur-robot'),
+        MV(/^v50/i, 'V50 Ultra Complete', 'mova-v50-ultra-robot-vacuum'),
+        MV(/^z50/i, 'Z50 Ultra', 'mova-z50-ultra-robot-vacuum'),
+        MV(/^p70/i, 'P70 Pro Ultra', 'robot-aspirateur-laveur-p70-pro-ultra'),
+        MV(/^p50\s*pro/i, 'P50 Pro Ultra', 'mova-p50-pro-ultra-robot-vacuum'),
+        MV(/^p50(?!\s*s)/i, 'P50 Ultra', 'mova-p50-ultra-robot-vacuum'),
+        MV(/^e50\s*pro/i, 'E50 Pro Ultra', 'e50-pro-ultra-robot-aspirateur'),
+        MV(/^e50/i, 'E50 Ultra', 'mova-e50-ultra-robot-aspirateur-blanc'),
+        MV(/^e40/i, 'E40 Ultra', 'mova-e40-ultra-robot-aspirateur'),
+        MV(/^e30/i, 'E30 Ultra', 'mova-e30-ultra-robot-vacuum'),
+        MV(/^e20\s*plus/i, 'E20 Plus', 'mova-e20-plus-robot-vacuum'),
+        MV(/^s20\s*ultra/i, 'S20 Ultra', 'mova-s20-ultra-robot-vacuum'),
+        MV(/^s10\s*plus/i, 'S10 Plus', 'mova-s10-plus-robot-vacuum'),
+        MV(/^s10$/i, 'S10', 'mova-s10-robot-vacuum'),
+        MV(/^m1$/i, 'M1', 'mova-m1-robot-vacuum'),
+        MV(/^m50\s*ultra/i, 'M50 Ultra', 'mova-m50-ultra-robot-aspirateur-laveur'),
+        MV(/^m50$/i, 'M50', 'm50-aspirateur-laveur'),
+        MV(/^x4\s*pro/i, 'X4 Pro', 'mova-x4-pro-wet-and-dry-vacuum'),
+        MV(/^x4\s*plus/i, 'X4 Plus', 'mova-x4-plus-aspirateur-laveur'),
+        MV(/^m10$/i, 'M10', 'mova-m10-wet-and-dry-vacuum'),
+        MV(/^k30/i, 'K30', 'mova-k30-wet-and-dry-vacuum'),
+        MV(/^k20/i, 'K20', 'k20-wet-and-dry-vacuum')
+      ]
+    },
+    roborock: {
+      nom: 'Roborock', app: 'Roborock', re: /roborock/i, sites: ['roborock.com'],
+      support: 'https://help.roborock.com/fr/',
+      zendesk: 'https://support.roborock.com/hc/fr/search?query=',
+      notices: G('Téléchargement des notices Roborock (FR)', 'https://support.roborock.com/hc/fr/sections/360002673932-T%C3%A9l%C3%A9charger'),
+      appli: G('Application Roborock', 'https://fr.roborock.com/pages/roborock-app'),
+      contact: G('Service client Roborock France : 0800 944 991, support-fr@roborock-eu.com', 'https://fr.roborock.com/pages/contact-us'),
+      youtube: 'https://www.youtube.com/channel/UC86CMysBnOMlRdBJEfihcUQ',
+      videos: G('Vidéos tutoriels officielles Roborock (FR)', 'https://support.roborock.com/hc/fr/sections/360004421492-Vid%C3%A9os-tutoriels'),
+      sujets: {
+        wifi: [
+          G("Guide de connexion de l'application au réseau (FR)", 'https://us.roborock.com/pages/telecharger-et-installer-l-application', 'Ouvrez le capot du robot'),
+          G('Où trouver le QR code demandé par l\'app (officiel, EN)', 'https://support.roborock.com/hc/en-us/articles/15396665837593-Where-can-I-find-QR-code-when-Roborock-app-asks-me-to-Scan-QR-code-during-wifi-connection'),
+          G('Échec Wi-Fi : autorisation « réseau local » iOS (avec capture)', 'https://support.roborock.com/hc/fr/articles/900006862343-Que-dois-je-faire-en-cas-d-%C3%A9chec-de-connexion-Wi-Fi', 'réseau local'),
+          G('Que faire lorsque la connexion Wi-Fi échoue ?', 'https://support.roborock.com/hc/fr/articles/360041710191-Que-dois-je-faire-lorsque-la-connexion-Wi-Fi-%C3%A9choue')
+        ],
+        reset: [G('Réinitialiser le système (vidéo officielle Roborock)', 'https://youtube.com/shorts/9F8as9-PbD0')]
+      },
+      modeles: [
+        { re: /s8\s*pro\s*ultra/i, nom: 'Roborock S8 Pro Ultra', page: 'https://help.roborock.com/en-US/product/s8-pro-ultra-message?category=faqs', pageT: 'Fiche assistance S8 Pro Ultra (FAQ officielle, EN)',
+          notices: [G('Notice S8 Pro Ultra (FR)', 'https://support.roborock.com/hc/fr/articles/18454435155609-Roborock-S8-Pro-Ultra-CE-FR-Manuel')],
+          sujets: { wifi: [G('S8 Pro Ultra : emplacement du QR code de connexion (FAQ officielle, EN)', 'https://help.roborock.com/en-US/product/s8-pro-ultra-message?category=faqs', 'The QR code is located below')] } },
+        { re: /saros\s*10\s*r/i, nom: 'Roborock Saros 10R', page: 'https://help.roborock.com/en-US/product/roborock-saros-10r-message?category=troubleshooting', pageT: 'Fiche dépannage Saros 10R (officielle, EN)',
+          notices: [G('Notice Saros 10R (CE, EN/FR)', 'https://support.roborock.com/hc/fr/articles/46143247785497-Roborock-Saros-10R-CE-EN-FR-User-Manual'),
+                    G('Notice Saros 10R (CE, multilingue dont FR)', 'https://support.roborock.com/hc/en-us/articles/46138440799257-Roborock-Saros-10R-CE-EN-ES-FR-IT-NL-NO-PL-SE-User-Manual')] },
+        { re: /saros\s*10(?!\s*r)/i, nom: 'Roborock Saros 10', page: 'https://help.roborock.com/en-US/product/roborock-saros-10-message?category=troubleshooting', pageT: 'Fiche dépannage Saros 10 (officielle, EN)',
+          notices: [G('Notice Saros 10 (CE, EN/FR)', 'https://support.roborock.com/hc/fr/articles/46142752011545-Roborock-Saros-10-CE-EN-FR-User-Manual')] },
+        { re: /qrevo\s*curv\s*2\s*flow/i, nom: 'Roborock Qrevo Curv 2 Flow', page: 'https://help.roborock.com/fr/product/qrevo-curv-2-flow-message?category=troubleshooting' },
+        { re: /qv\s*35\s*a/i, nom: 'Roborock QV 35A', page: 'https://help.roborock.com/fr/product/qv-35a-message?category=troubleshooting' }
+      ]
+    },
+    irobot: {
+      nom: 'iRobot', app: 'iRobot Home', re: /irobot|roomba|braava/i, sites: ['irobot.fr', 'irobot.com'],
+      support: 'https://assistance.irobot.fr/s/article/17734',
+      sujets: {
+        wifi: [G("Configurer le robot Wi-Fi avec l'application iRobot Home", 'https://assistance.irobot.fr/s/article/17734', 'Ajouter votre produit')],
+        vocal: [G('Associer le robot à Google Assistant', 'https://assistance.irobot.fr/s/article/1506')]
+      }
+    },
+    dyson: {
+      nom: 'Dyson', app: 'MyDyson', re: /dyson/i, sites: ['dyson.fr'],
+      support: '',
+      appli: G('Application MyDyson', 'https://www.dyson.fr/app'),
+      sujets: {
+        wifi: [G('Installer un aspirateur robot et le connecter à MyDyson', 'https://www.dyson.fr/discover/insights/nettoyer/comment-installer-un-aspirateur-robot', 'Commencez par télécharger')]
+      },
+      modeles: [
+        { re: /360\s*vis\s*nav/i, nom: 'Dyson 360 Vis Nav', page: 'https://www.dyson.fr/support/vacuum-cleaners/robots/360-vis-nav',
+          notices: [G("Guide d'utilisation Dyson 360 Vis Nav (PDF FR)", 'https://www.dyson.fr/content/dam/dyson/maintenance/user-guides/fr_FR/vacuumcleaners/robotvacuums/rb03/304623-01.pdf')] },
+        { re: /spot\s*\+?\s*(and\s*|&\s*)?scrub/i, nom: 'Dyson Spot+Scrub Ai', page: 'https://www.dyson.fr/support/journey/guides/Vacuum-cleaners/Robot/rb05',
+          sujets: {
+            wifi: [G('Spot+Scrub Ai : connexion MyDyson, vidéos, notice', 'https://www.dyson.fr/support/journey/guides/Vacuum-cleaners/Robot/rb05')],
+            carte: [G('Spot+Scrub Ai : carte, pièces, zones à éviter', 'https://www.dyson.fr/support/journey/guides/Vacuum-cleaners/Robot/rb05')]
+          } }
+      ]
+    },
+    tineco: {
+      nom: 'Tineco', app: 'Tineco', re: /tineco/i, sites: ['tineco.com'],
+      support: '',
+      sujets: {},
+      modeles: [
+        { re: /^(floor\s*one\s*)?s5\s*combo$/i, nom: 'FLOOR ONE S5 COMBO', sujets: { wifi: [G('Dépannage connexion app : FLOOR ONE S5 COMBO', 'https://fr.tineco.com/support/troubleshooting/floor-one-s5-combo/solution/365.html')] } },
+        { re: /^(floor\s*one\s*)?s5$/i, nom: 'FLOOR ONE S5', sujets: { wifi: [G('Dépannage connexion app : FLOOR ONE S5', 'https://fr.tineco.com/support/troubleshooting/floor-one-s5/solution/365.html')] } },
+        { re: /^(floor\s*one\s*)?s3$/i, nom: 'FLOOR ONE S3', sujets: { wifi: [G('Dépannage connexion app : FLOOR ONE S3', 'https://fr.tineco.com/support/troubleshooting/floor-one-s3/solution/365.html')] } }
+      ]
+    },
+    samsung: {
+      nom: 'Samsung', app: 'SmartThings', re: /samsung|jet\s*bot/i, sites: ['samsung.com'],
+      support: 'https://www.samsung.com/fr/support/home-appliances/comment-utiliser-mon-jet-bot-avec-smartthings/',
+      sujets: {
+        wifi: [G('Connecter le Jet Bot à SmartThings (pas à pas)', 'https://www.samsung.com/be_fr/support/home-appliances/comment-connecter-mon-jet-bot-a-smartthings/', 'Appuyez sur le bouton Recharge')],
+        carte: [G('Jet Bot + SmartThings : cartes, zones, modes', 'https://www.samsung.com/fr/support/home-appliances/comment-utiliser-mon-jet-bot-avec-smartthings/', 'Gérer les cartes')],
+        prog: [G('Jet Bot + SmartThings : programmation et réglages', 'https://www.samsung.com/fr/support/home-appliances/comment-utiliser-mon-jet-bot-avec-smartthings/')]
+      }
+    },
+    lg: {
+      nom: 'LG', app: 'LG ThinQ', re: /\blg\b|cordzero|thinq/i, sites: ['lg.com'],
+      support: '',
+      sujets: {}
+    },
+    bissell: {
+      nom: 'Bissell', app: 'BISSELL Connect', re: /bissell|spinwave|crosswave/i, sites: ['bissell.fr', 'bissell.com'],
+      support: 'https://www.bissell.fr/service-client-bissell/foire-aux-questions',
+      contact: G('Assistance technique BISSELL France', 'https://www.bissell.fr/contact/assistance-technique'),
+      sujets: {}
+    },
+    rowenta: {
+      nom: 'Rowenta', app: 'Rowenta Robots', re: /rowenta|x[- ]?plorer/i, sites: ['rowenta.fr', 'rowenta.com', 'rowenta.ch'],
+      support: 'https://www.rowenta.fr/x-plorer',
+      sujets: {},
+      modeles: [
+        { re: /s[ée]rie\s*40/i, nom: 'X-PLORER SÉRIE 40 Animal Connect (RR7255WH)',
+          notices: [G('Notice et FAQ X-PLORER SÉRIE 40 (officiel)', 'https://www.rowenta.fr/notices/csp/2211400676')],
+          sujets: { wifi: [G('Erreurs de connexion Wi-Fi et solutions (FAQ officielle)', 'https://www.rowenta.fr/notices/csp/2211400676', 'Après avoir saisi votre mot de passe')] } },
+        { re: /120\s*ai/i, nom: 'X-PLORER SÉRIE 120 AI',
+          notices: [G('Notice et FAQ X-PLORER SÉRIE 120 AI (officiel)', 'https://www.rowenta.fr/notices/entretien-des-sols/aspirateur-robot/x-plorer-serie-120-ai/csp/2211401021')],
+          sujets: { wifi: [G('Voyant Wi-Fi et échec de connexion (FAQ officielle)', 'https://www.rowenta.fr/notices/entretien-des-sols/aspirateur-robot/x-plorer-serie-120-ai/csp/2211401021', 'vérifiez que le voyant Wi-Fi clignote')] } },
+        { re: /s[ée]rie\s*50/i, nom: 'X-PLORER SÉRIE 50',
+          notices: [G('Notice et FAQ X-PLORER SÉRIE 50 (officiel)', 'https://www.rowenta.fr/notices/csp/2211400899')] },
+        { re: /\b80\b/i, nom: 'X-Plorer 80 Animal Connect (RR7755WH)',
+          notices: [G('Notice et FAQ X-Plorer 80 Animal Connect (officiel)', 'https://www.rowenta.ch/fr/notices/Produits/Entretien-des-sols/Aspirateur-robot/X-Plorer-80-Animal-Connect-RR7755WH/csp/2211400702')] }
+      ]
+    },
+    seb: {
+      nom: 'SEB', app: '', re: /\bseb\b/i, sites: ['seb.fr'],
+      support: 'https://www.seb.fr/notices',
+      sujets: {}
+    },
+    moulinex: {
+      nom: 'Moulinex', app: '', re: /moulinex/i, sites: ['moulinex.fr'],
+      support: 'https://www.moulinex.fr/notices',
+      sujets: {}
+    },
+    bosch: {
+      nom: 'Bosch', app: 'Home Connect', re: /\bbosch\b/i, sites: ['bosch-home.fr'],
+      support: 'https://www.bosch-home.fr/nos-services/aide-en-ligne',
+      notices: G('Notice Bosch par numéro E-Nr (officiel)', 'https://www.bosch-home.fr/nos-services/aide-en-ligne/manuel-recherche'),
+      sujets: {}
+    },
+    karcher: {
+      nom: 'Kärcher', app: 'Kärcher Home Robots', re: /k[äa]e?rcher|\brc[vf]\s?\d/i, sites: ['kaercher.com'],
+      support: 'https://www.kaercher.com/ca-fr/home-garden/aspirateur-laveur-robot.html',
+      sujets: {
+        wifi: [G("FAQ robots Kärcher : connexion à l'app Home Robots", 'https://www.kaercher.com/ca-fr/home-garden/aspirateur-laveur-robot.html', 'Détecter les appareils')]
+      },
+      modeles: [
+        { re: /rcv\s*3/i, nom: 'Kärcher RCV 3', page: 'https://www.kaercher.com/fr/home-garden/robot-aspirateur-laveur/robot-aspirateur-rcv-3-12696200.html' }
+      ]
+    }
+  };
+
+  /* ── Outils ── */
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function avecFragment(u, f) {
+    if (!f) return u;
+    var enc = function (x) { return encodeURIComponent(x).replace(/-/g, '%2D'); };
+    if (Object.prototype.toString.call(f) === '[object Array]') return u + '#:~:text=' + enc(f[0]) + (f[1] ? ',-' + enc(f[1]) : '');
+    return u + '#:~:text=' + enc(f);
+  }
+  function siteExpr(M) {
+    if (!M || !M.sites || !M.sites.length) return '';
+    return M.sites.map(function (s) { return 'site:' + s; }).join(' OR ');
+  }
+  function gUrl(q) { return 'https://www.google.com/search?q=' + encodeURIComponent(q.replace(/\s+/g, ' ').trim()); }
+  function gImgUrl(q) { return 'https://www.google.com/search?tbm=isch&q=' + encodeURIComponent(q.replace(/\s+/g, ' ').trim()); }
+  function ytUrl(q) { return 'https://www.youtube.com/results?search_query=' + encodeURIComponent(q.replace(/\s+/g, ' ').trim()); }
+
+  var MOTS_MODELE = /^(deebot|winbot|roomba|braava|jet|bot|jetbot|spot\+?|scrub|vis|nav|floor|one|pure|ifloor|switch|cordzero|kompressor|spinwave|crosswave|cleanview|rcv|rcf|pro|ultra|omni|max|plus|complete|heat|gen\d*|ai\+?|lite|slim|prime|turbo|combo|mix|aqua|qrevo|saros|curv|edge|master|refill|drain|roller|standalone|mobius|ae|x-?plorer|explorer|s[ée]rie|animal|connect|mini|hybrid|omnicyclone|s|x|e|l|d|v|j|i|t|q|p|z|m|c|n)$/i;
+  var PAS_MODELE = /ghz|mhz|%|€|^\d{5,}$|^\d+(h|min|mn|cm|mm|ans?|mois|jours?|m²|m2)$/i;
+  var GAMMES = /^(deebot|winbot|roomba|braava|jetbot|spinwave|crosswave|cleanview|cordzero|kompressor|qrevo|saros)$/i;
+
+  function nettoyerTok(t) { return String(t).replace(/^[^0-9A-Za-zÀ-ÿ+]+|[^0-9A-Za-zÀ-ÿ+]+$/g, ''); }
+  function estTokModele(t) {
+    if (!t || PAS_MODELE.test(t)) return false;
+    return (/\d/.test(t) && t.length <= 12) || MOTS_MODELE.test(t);
+  }
+
+  function detecterMarque(texte, indice) {
+    if (indice) {
+      var hi = String(indice);
+      for (var k0 in MARQUES) { if (MARQUES.hasOwnProperty(k0) && MARQUES[k0].re.test(hi)) return k0; }
+    }
+    var t = String(texte || ''), best = null, bestIdx = Infinity;
+    for (var k in MARQUES) {
+      if (!MARQUES.hasOwnProperty(k)) continue;
+      var m = MARQUES[k].re.exec(t);
+      if (m && m.index < bestIdx) { best = k; bestIdx = m.index; }
+    }
+    return best;
+  }
+
+  function extraireModele(texte, cle) {
+    var toks = String(texte || '').split(/\s+/).map(nettoyerTok).filter(Boolean);
+    var re = cle && MARQUES[cle] ? MARQUES[cle].re : null;
+    var i, out = [];
+    if (re) {
+      for (i = 0; i < toks.length; i++) {
+        if (re.test(toks[i])) {
+          if (MOTS_MODELE.test(toks[i])) out.push(toks[i]);
+          for (var j = i + 1; j < toks.length && out.length < 6; j++) {
+            if (!estTokModele(toks[j])) break;
+            out.push(toks[j]);
+          }
+          if (out.length && /\d|\+/.test(out.join(' '))) return out.join(' ');
+          if (out.length >= 2 || (out.length === 1 && GAMMES.test(out[0]))) return out.join(' ');
+          out = [];
+        }
+      }
+    }
+    // Repli : première suite de jetons « modèle » contenant un chiffre
+    var run = [];
+    for (i = 0; i <= toks.length; i++) {
+      if (i < toks.length && estTokModele(toks[i]) && run.length < 6) { run.push(toks[i]); continue; }
+      if (run.length && /\d/.test(run.join(' '))) return run.join(' ');
+      run = [];
+    }
+    return '';
+  }
+
+  function trouverModele(M, modele) {
+    if (!M || !M.modeles || !modele) return null;
+    for (var i = 0; i < M.modeles.length; i++) { if (M.modeles[i].re.test(modele)) return M.modeles[i]; }
+    return null;
+  }
+
+  function detecterSujets(texte) {
+    var t = String(texte || ''), out = [];
+    for (var i = 0; i < SUJETS.length && out.length < 2; i++) { if (SUJETS[i].re.test(t)) out.push(SUJETS[i]); }
+    return out;
+  }
+
+  /* ── Résolution ── */
+  function ovpemNoticeResoudre(texte, opts) {
+    opts = opts || {};
+    var cle = detecterMarque(texte, opts.marque);
+    var M = cle ? MARQUES[cle] : null;
+    var libre = (!M && opts.marque && !/^autre$/i.test(String(opts.marque))) ? String(opts.marque).trim() : '';
+    if (libre) libre = libre.charAt(0).toUpperCase() + libre.slice(1).toLowerCase();
+    var modele = String(opts.modele || extraireModele(texte, cle) || '').trim();
+    var ref = trouverModele(M, modele);
+    var sujets = detecterSujets(texte);
+    var vus = {};
+    function pousser(liste, l, type) {
+      if (!l || !l.u || vus[l.u + '|' + type]) return;
+      vus[l.u + '|' + type] = 1;
+      liste.push({ t: l.t, u: avecFragment(l.u, l.f), brut: l.u, type: type });
+    }
+
+    var nomAff = ((M ? M.nom + ' ' : (libre ? libre + ' ' : '')) + modele).trim();
+    var qSujet = sujets.length ? sujets.map(function (s) { return s.q; }).join(' ') : '';
+    var zSujet = sujets.length ? sujets[0].z : '';
+    var groupes = [];
+
+    // 1. Procédure officielle
+    var off = [];
+    sujets.forEach(function (s) {
+      ((ref && ref.sujets && ref.sujets[s.k]) || []).forEach(function (l) { pousser(off, l, 'officiel'); });
+      ((M && M.sujets && M.sujets[s.k]) || []).forEach(function (l) { pousser(off, l, 'officiel'); });
+    });
+    off = off.slice(0, 5);
+    if (ref && ref.page) pousser(off, G(ref.pageT || ('Fiche assistance ' + ref.nom + ' (FAQ + notices)'), ref.page), 'officiel');
+    if (M && M.support) pousser(off, G('Centre d\'aide officiel ' + M.nom, M.support), 'officiel');
+    if (off.length) groupes.push({ titre: 'Procédure officielle', liens: off });
+
+    // 2. Notice
+    var not = [];
+    ((ref && ref.notices) || []).forEach(function (l) { pousser(not, l, 'notice'); });
+    if (M && M.notices) pousser(not, M.notices, 'notice');
+    pousser(not, G('Rechercher la notice PDF officielle' + (modele ? ' : ' + modele : ''),
+      gUrl(siteExpr(M) + ' ' + (nomAff || texte) + ' notice OR manuel OR "instruction manual" pdf')), 'recherche');
+    groupes.push({ titre: "Notice d'utilisation", liens: not });
+
+    // 3. Page exacte
+    var rech = [];
+    var qBase = (siteExpr(M) + ' ' + (libre ? libre + ' ' : '') + (modele || (M ? '' : String(texte || '').slice(0, 80))) + ' ' + (qSujet || (M ? 'application aide' : ''))).trim();
+    pousser(rech, G('Page officielle du sujet' + (sujets.length ? ' : ' + sujets[0].label : ''), gUrl(qBase)), 'recherche');
+    if (M && M.recherche && modele && !(ref && ref.page)) pousser(rech, G('Rechercher « ' + modele + ' » sur l\'assistance ' + M.nom + ' (officiel)', M.recherche + modele.toLowerCase().split(/\s+/).map(encodeURIComponent).join('+')), 'recherche');
+    if (M && M.zendesk && modele && !(ref && ref.page)) pousser(rech, G('Fiche « ' + modele + ' » dans le centre d\'aide ' + M.nom + ' (notice, vidéos)', M.zendesk + encodeURIComponent(modele)), 'recherche');
+    if (M && M.zendesk && zSujet) pousser(rech, G('Recherche « ' + zSujet + ' » dans le centre d\'aide ' + M.nom, M.zendesk + encodeURIComponent(zSujet)), 'recherche');
+    groupes.push({ titre: 'Trouver la page exacte', liens: rech });
+
+    // 4. En images
+    var vis = [];
+    var qVis = (nomAff || String(texte || '').slice(0, 80)) + ' ' + (qSujet || 'tutoriel application');
+    pousser(vis, G('Tutoriel vidéo (étapes filmées)', ytUrl(qVis)), 'video');
+    pousser(vis, G("Captures d'écran de l'application", gImgUrl(((M && M.app ? M.app + ' ' : '') + qVis))), 'images');
+    if (M && M.videos) pousser(vis, M.videos, 'video');
+    if (M && M.youtube) pousser(vis, G('Chaîne vidéo officielle ' + M.nom, M.youtube), 'video');
+    groupes.push({ titre: 'Étapes en images', liens: vis });
+
+    // 5. Application
+    if (M && M.appli) groupes.push({ titre: 'Application ' + M.app, liens: [{ t: M.appli.t, u: M.appli.u, brut: M.appli.u, type: 'officiel' }] });
+
+    // 6. Contact SAV constructeur
+    if (M && M.contact) groupes.push({ titre: 'Contact SAV ' + M.nom, liens: [{ t: M.contact.t, u: M.contact.u, brut: M.contact.u, copie: M.contact.t.replace(/^[^:]*:\s*/, ''), type: 'officiel' }] });
+
+    return {
+      marque: M ? { cle: cle, nom: M.nom, app: M.app, sites: M.sites.slice() } : null,
+      marqueLibre: libre,
+      modele: modele,
+      modeleRef: ref ? { nom: ref.nom, page: ref.page || '' } : null,
+      sujets: sujets.map(function (s) { return { k: s.k, label: s.label }; }),
+      groupes: groupes,
+      verif: VERIF
+    };
+  }
+
+  /* ── Rendu panneau ── */
+  function ovpemNoticePanelHtml(res, opts) {
+    if (!res) return '';
+    opts = opts || {};
+    var nomMod = res.modeleRef ? res.modeleRef.nom : (res.modele || 'modèle non précisé');
+    if (res.marque && nomMod.toLowerCase().indexOf(res.marque.nom.toLowerCase() + ' ') === 0) nomMod = nomMod.slice(res.marque.nom.length + 1);
+    var ctx = [res.marque ? res.marque.nom : (res.marqueLibre || 'Marque non reconnue'), nomMod];
+    if (res.sujets.length) ctx.push(res.sujets.map(function (s) { return s.label; }).join(', '));
+    var h = '<details class="ovn-panel"' + (opts.replie ? '' : ' open') + '>';
+    h += '<summary class="ovn-head"><span class="ovn-title">Liens directs : notice &amp; application</span>';
+    h += '<span class="ovn-ctx">' + esc(ctx.join(' | ')) + '</span></summary>';
+    res.groupes.forEach(function (g) {
+      h += '<div class="ovn-grp"><div class="ovn-grp-t">' + esc(g.titre) + '</div><ul class="ovn-list">';
+      g.liens.forEach(function (l) {
+        h += '<li class="ovn-li ovn-' + esc(l.type) + '"><a class="ovn-a" href="' + esc(l.u) + '" target="_blank" rel="noopener noreferrer">' + esc(l.t) + '</a>';
+        if (l.type === 'officiel' || l.type === 'notice') {
+          h += '<button type="button" class="ovn-copy" data-ovn-copy="' + esc(l.copie || l.brut) + '" title="' + (l.copie ? 'Copier les coordonnées' : 'Copier le lien pour l\'envoyer au client') + '">Copier</button>';
+        }
+        h += '</li>';
+      });
+      h += '</ul></div>';
+    });
+    h += '<p class="ovn-note">Pages constructeur vérifiées le ' + esc(res.verif) + '. Les liens de recherche ouvrent des résultats filtrés sur le site officiel de la marque.</p>';
+    h += '</details>';
+    return h;
+  }
+
+  var APP_SUJETS = ['wifi', 'carte', 'prog', 'maj', 'reset', 'partage', 'vocal'];
+  function ovpemNoticeEstApp(res) {
+    return !!(res && res.sujets && res.sujets.some(function (x) { return APP_SUJETS.indexOf(x.k) !== -1; }));
+  }
+  function ovpemNoticePertinent(res) {
+    return !!(res && (res.marque || res.sujets.length));
+  }
+  /* Liens constructeur vérifiés uniquement (sans les recherches), pour les exports */
+  function ovpemNoticeLiensOfficiels(res) {
+    var out = [];
+    (res && res.groupes || []).forEach(function (g) {
+      g.liens.forEach(function (l) { if (l.type === 'officiel' || l.type === 'notice') out.push(l); });
+    });
+    return out;
+  }
+  /* Conversation : la question fixe le sujet ; la marque / le modèle manquants
+     sont repris du contexte (messages précédents, bandeau de contexte). */
+  function ovpemNoticeResoudreConv(question, contexte) {
+    var res = ovpemNoticeResoudre(question);
+    var ctx = String(contexte || '');
+    if (!ctx) return res;
+    if (!res.marque) {
+      var k = detecterMarque(ctx);
+      if (k) res = ovpemNoticeResoudre(question, { marque: MARQUES[k].nom, modele: extraireModele(question, k) || extraireModele(ctx, k) });
+    } else if (!res.modele) {
+      var m = extraireModele(ctx, res.marque.cle);
+      if (m) res = ovpemNoticeResoudre(question, { marque: res.marque.nom, modele: m });
+    }
+    return res;
+  }
+
+  /* ── Bloc prompt (Référent Virtuel : mode 'chat' / Décodeur Verbatim : mode 'json') ──
+     Règle OVPEM : l'IA n'écrit jamais d'URL ; le programme affiche les liens vérifiés. */
+  function ovpemNoticePromptBloc(res, opts) {
+    if (!res) return '';
+    opts = opts || {};
+    var M = res.marque;
+    var app = (M && M.app) ? M.app : "l'application du constructeur";
+    var mod = res.modeleRef ? res.modeleRef.nom : (res.modele || 'non précisé');
+    var suj = res.sujets.length ? res.sujets.map(function (x) { return x.label; }).join(', ') : 'à déduire de la demande';
+    var L = [];
+    L.push('═══ PROCÉDURE APPLICATION & NOTICE (OVPEM V3.01) ═══');
+    L.push('Marque : ' + (M ? M.nom : (res.marqueLibre || 'à identifier')) + ' | Application : ' + app + ' | Modèle : ' + mod + ' | Sujet : ' + suj);
+    if (opts.mode === 'json') {
+      L.push('Renseigne le champ "procedure_application" : "concernee": true, "application": "' + app + '", "etapes" = étapes EXACTES dans l\'application pour ce modèle (une étape = une action : nom exact du menu ou du bouton à l\'écran, action physique sur l\'appareil : bouton, voyant, message vocal, puis résultat attendu), "ou_voir_illustration" = section ou page de la notice officielle qui montre ces écrans.');
+      L.push('N\'écris aucune URL dans le JSON : OVPEM affiche lui-même les liens officiels vérifiés (notice, page d\'aide à l\'étape concernée, vidéo).');
+    } else {
+      L.push('Ajoute, juste avant « ⚠️ Rappel », la section :');
+      L.push('📱 PROCÉDURE APPLICATION : étapes numérotées EXACTES dans ' + app + ' pour ce modèle. Une étape = une action : nom exact du menu ou du bouton à l\'écran, action physique sur l\'appareil (bouton, voyant, message vocal), résultat attendu. Termine par « Illustration : » suivi de la section de la notice officielle qui montre ces écrans.');
+      L.push('N\'écris aucune URL : OVPEM affiche sous ta réponse les liens officiels vérifiés (notice, page d\'aide à l\'étape concernée, vidéo).');
+    }
+    return L.join('\n');
+  }
+
+  /* ── Bandeau phrase d'accueil (profil Magasin/Hotline/RCD Guidage rapide IA) ── */
+  function ovpemAccueilBandeauHtml() {
+    return '<div class="ovn-accueil ovn-accueil-novice" role="note" aria-label="Phrase d\'accueil client">'
+      + '<div class="ovn-accueil-top"><span class="ovn-accueil-lbl">Phrase d\'accueil client, à lire en début d\'appel</span>'
+      + '<button type="button" class="ovn-copy" data-ovn-copy-accueil="1">Copier</button></div>'
+      + '<p class="ovn-accueil-txt">' + esc(OVPEM_PHRASE_ACCUEIL) + '</p></div>';
+  }
+
+  function ovpemAccueilInstall() {
+    if (typeof document === 'undefined') return;
+    ['#ovd-app .ovd-app-body', '#aiOverlay .ai-body'].forEach(function (sel) {
+      var host = document.querySelector(sel);
+      if (!host || host.querySelector('.ovn-accueil-novice')) return;
+      host.insertAdjacentHTML('afterbegin', ovpemAccueilBandeauHtml());
+    });
+  }
+
+  /* ── CSS (injecté une seule fois ; le fichier OVPEM embarque déjà la feuille #ovn-css) ── */
+  var OVN_CSS = ''
+    + '.ovn-accueil{margin:0 0 14px;padding:12px 14px;border-left:4px solid #f59e0b;border-radius:8px;background:rgba(245,158,11,.10);color:var(--text,#dde3f0)}'
+    + '.ovn-accueil-novice{display:none}'
+    + 'body.profile-novice .ovn-accueil-novice{display:block}'
+    + '.ovn-accueil-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}'
+    + '.ovn-accueil-lbl{font:700 12.5px/1.3 "DM Sans",system-ui,sans-serif;color:#fbbf24}'
+    + '.ovn-accueil-txt{margin:0;font:500 14.5px/1.55 "DM Sans",system-ui,sans-serif;max-width:80ch}'
+    + '.ovn-panel{margin:12px 0 4px;border:1px solid var(--border,#253047);border-radius:10px;background:var(--surface2,#1e2940);color:var(--text,#dde3f0)}'
+    + '.ovn-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;padding:10px 14px;cursor:pointer;list-style:none}'
+    + '.ovn-head::-webkit-details-marker{display:none}'
+    + '.ovn-head::before{content:"\\25B8";color:#fbbf24;font-size:11px;transition:transform .15s}'
+    + '.ovn-panel[open]>.ovn-head::before{transform:rotate(90deg)}'
+    + '.ovn-title{font:700 14px/1.3 "DM Sans",system-ui,sans-serif;color:#fbbf24}'
+    + '.ovn-ctx{font:500 12px/1.3 "DM Sans",system-ui,sans-serif;color:var(--text2,#8b99b8)}'
+    + '.ovn-grp{margin:0 14px 8px}'
+    + '.ovn-grp-t{font:700 11.5px/1.3 "DM Sans",system-ui,sans-serif;color:var(--text2,#8b99b8);margin:6px 0 3px}'
+    + '.ovn-list{list-style:none;margin:0;padding:0}'
+    + '.ovn-li{display:flex;align-items:center;gap:8px;padding:3px 0}'
+    + '.ovn-li::before{content:"";flex:none;width:7px;height:7px;border-radius:50%;background:#6b7a99}'
+    + '.ovn-officiel::before{background:#34d399}.ovn-notice::before{background:#60a5fa}.ovn-video::before{background:#f87171}.ovn-images::before{background:#fbbf24}'
+    + '.ovn-a{flex:1;min-width:0;color:#fcd34d;font:500 13px/1.4 "DM Sans",system-ui,sans-serif;text-decoration:none;overflow-wrap:anywhere}'
+    + '.ovn-a:hover{text-decoration:underline}'
+    + '.ovn-a:focus-visible,.ovn-copy:focus-visible,.ovn-head:focus-visible{outline:2px solid #f59e0b;outline-offset:2px;border-radius:3px}'
+    + '.ovn-copy{flex:none;padding:2px 9px;border:1px solid var(--border2,#2e3a54);border-radius:6px;background:transparent;color:var(--text,#dde3f0);font:600 11px/1.6 "DM Sans",system-ui,sans-serif;cursor:pointer}'
+    + '.ovn-copy:hover{border-color:#f59e0b}'
+    + '.ovn-note{margin:4px 14px 10px;font:400 11px/1.4 "DM Sans",system-ui,sans-serif;color:var(--text2,#8b99b8)}'
+    + '.ovn-proc{margin:0 0 10px;padding:10px 12px;border-radius:8px;border:1px solid rgba(96,165,250,.35);background:rgba(59,130,246,.08)}'
+    + '.ovn-proc-t{font:700 13px/1.3 "DM Sans",system-ui,sans-serif;color:var(--text,#dde3f0);margin-bottom:6px}'
+    + '.ovn-proc-list{margin:0 0 0 20px;padding:0;font-size:13px;line-height:1.55;color:var(--text,#dde3f0)}'
+    + '.ovn-proc-list li{margin:2px 0}'
+    + '.ovn-proc-illu{margin-top:6px;font-size:12px;color:var(--text2,#8b99b8)}'
+    + '.ovn-proc-lbl{color:#93c5fd}'
+    + '.light .ovn-accueil{background:#fff4de;color:#1a2236}.light .ovn-accueil-lbl,.light .ovn-title{color:#8a4b00}'
+    + '.light .ovn-head::before{color:#8a4b00}'
+    + '.light .ovn-panel{background:#ffffff;color:#1a2236}'
+    + '.light .ovn-ctx,.light .ovn-grp-t,.light .ovn-note,.light .ovn-proc-illu{color:#4a5978}'
+    + '.light .ovn-a{color:#8a4b00}.light .ovn-copy{color:#1a2236}'
+    + '.light .ovn-proc{background:#eef4ff}.light .ovn-proc-t,.light .ovn-proc-list{color:#1a2236}.light .ovn-proc-lbl{color:#1d4ed8}'
+    + '@media print{.ovn-accueil,.ovn-copy{display:none!important}.ovn-panel{border-color:#999}.ovn-a{color:#000}}';
+  function ovpemNoticeInjectCss() {
+    if (typeof document === 'undefined' || document.getElementById('ovn-css')) return;
+    var s = document.createElement('style'); s.id = 'ovn-css'; s.textContent = OVN_CSS;
+    (document.head || document.documentElement).appendChild(s);
+  }
+
+  /* ── Copie presse-papiers (capture, repli execCommand pour file://) ── */
+  function copier(txt, btn) {
+    function ok() { if (btn) { var o = btn.textContent; btn.textContent = 'Copié'; setTimeout(function () { btn.textContent = o; }, 1400); } }
+    function repli() {
+      try {
+        var ta = document.createElement('textarea');
+        ta.value = txt; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); ok();
+      } catch (e) { /* silencieux */ }
+    }
+    if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(txt).then(ok, repli); } else { repli(); }
+  }
+  function ovpemNoticeInitEvents() {
+    if (typeof document === 'undefined' || document.__ovnEvents) return;
+    document.__ovnEvents = true;
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ovpemAccueilInstall);
+    else ovpemAccueilInstall();
+    document.addEventListener('click', function (ev) {
+      var b = ev.target && ev.target.closest ? ev.target.closest('[data-ovn-copy],[data-ovn-copy-accueil]') : null;
+      if (!b) return;
+      ev.preventDefault();
+      copier(b.hasAttribute('data-ovn-copy-accueil') ? OVPEM_PHRASE_ACCUEIL : b.getAttribute('data-ovn-copy'), b);
+    }, true);
+  }
+
+  var api = {
+    OVPEM_NOTICES: MARQUES,
+    OVPEM_NOTICE_SUJETS: SUJETS,
+    OVPEM_PROFIL_RCD_LABEL: OVPEM_PROFIL_RCD_LABEL,
+    OVPEM_PHRASE_ACCUEIL: OVPEM_PHRASE_ACCUEIL,
+    ovpemNoticeResoudre: ovpemNoticeResoudre,
+    ovpemNoticePanelHtml: ovpemNoticePanelHtml,
+    ovpemNoticePromptBloc: ovpemNoticePromptBloc,
+    ovpemAccueilBandeauHtml: ovpemAccueilBandeauHtml,
+    ovpemAccueilInstall: ovpemAccueilInstall,
+    ovpemNoticeResoudreConv: ovpemNoticeResoudreConv,
+    ovpemNoticeEstApp: ovpemNoticeEstApp,
+    ovpemNoticePertinent: ovpemNoticePertinent,
+    ovpemNoticeLiensOfficiels: ovpemNoticeLiensOfficiels,
+    ovpemNoticeInitEvents: ovpemNoticeInitEvents,
+    ovpemNoticeInjectCss: ovpemNoticeInjectCss,
+    OVN_CSS: OVN_CSS,
+    _extraireModele: extraireModele,
+    _detecterMarque: detecterMarque,
+    _avecFragment: avecFragment
+  };
+  for (var n in api) { if (api.hasOwnProperty(n)) root[n] = api[n]; }
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  if (typeof document !== 'undefined' && document.addEventListener) { try { ovpemNoticeInjectCss(); ovpemNoticeInitEvents(); } catch (e) { /* silencieux */ } }
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+
 <!-- ═══════════════════════════════════════════════════════════
      🧩 DÉCODEUR VERBATIM PEM — Module additif V2.62
      UI : modale principale + config IA + auth
@@ -27319,6 +29330,15 @@ console.log('[OVPEM V2.49] Triage Rapide activé — quickprobe distinct de Stat
         </div>
         <div class="ovd-panel-body">
           <textarea id="ovd-verbatim" class="ovd-textarea" placeholder="Exemple : LE ROBOT DEEBOT X5 SIGNALE UN MESSAGE ERREUR EVIER TROP PLEIN"></textarea>
+          <!-- V3.02 — aide à la description du symptôme -->
+          <div class="ovd-aide" id="ovd-aide">
+            <div class="ovd-aide-bar">
+              <div class="ovd-qualite" id="ovd-qualite" aria-live="polite"></div>
+              <button type="button" class="ovd-btn" id="ovd-aide-btn" aria-expanded="false" aria-controls="ovd-aide-panel" onclick="ovdAide.basculer()">🧭 Aide à la description</button>
+            </div>
+            <div class="ovd-aide-conseil" id="ovd-aide-conseil"></div>
+            <div class="ovd-aide-panel" id="ovd-aide-panel" hidden></div>
+          </div>
           <div class="ovd-context-row">
             <div>
               <label class="ovd-field-label">Marque <span class="opt">(optionnel)</span></label>
@@ -27357,9 +29377,11 @@ console.log('[OVPEM V2.49] Triage Rapide activé — quickprobe distinct de Stat
           </div>
           <div class="ovd-input-bar">
             <button class="ovd-btn-hero" onclick="OVD.analyze()">🧩 Analyser le verbatim</button>
-            <div class="ovd-mode-toggle">
-              <button class="on" data-mode="atelier" onclick="OVD.setMode('atelier')">Atelier</button>
-              <button data-mode="magasin" onclick="OVD.setMode('magasin')">Magasin</button>
+            <div class="ovd-mode-toggle" role="group" aria-label="Réponse adaptée pour">
+              <button class="on" data-mode="atelier" aria-pressed="true" onclick="OVD.setMode('atelier')" title="Technicien d'atelier : tests, mesures et pièces">Atelier</button>
+              <button data-mode="magasin" aria-pressed="false" onclick="OVD.setMode('magasin')" title="Vendeur au comptoir : gestes sans outil, ce qu'il faut dire au client">Magasin</button>
+              <button data-mode="hotline" aria-pressed="false" onclick="OVD.setMode('hotline')" title="Hotline : questions fermées à poser au téléphone">Hotline</button>
+              <button data-mode="rcd" aria-pressed="false" onclick="OVD.setMode('rcd')" title="RCD, comptoir distant : solution que le client applique chez lui, pour éviter le dépôt en magasin">RCD</button>
             </div>
             <button class="ovd-btn" onclick="OVD.clearAll()">↺ Effacer</button>
           </div>
@@ -27549,6 +29571,120 @@ const MODELS = {
 const DEFAULT_MODEL = {gemini:'gemini-2.0-flash',claude:'claude-sonnet-4-5',openai:'gpt-4o-mini'};
 
 let mode = 'atelier';
+/* ════ V3.02 — Audiences du Décodeur : Atelier, Magasin, Hotline, RCD ════
+   Même choix que le Référent Virtuel (clé partagée ovpem_ai_audience).
+   RCD = comptoir distant : résoudre au téléphone pour éviter le dépôt en magasin. */
+const OVD_MODES = {
+  atelier: {lbl:'Atelier', aud:'technicien', dir:"AUDIENCE DE L'UTILISATEUR : TECHNICIEN D'ATELIER (appareil en main, outillage disponible). Terminologie technique complète, mesures et tests discriminants dans plan_action."},
+  magasin: {lbl:'Magasin', aud:'magasin', dir:"AUDIENCE DE L'UTILISATEUR : VENDEUR EN MAGASIN (appareil au comptoir, sans outil ni démontage). Vocabulaire simple : privilégie ce qui se vérifie et se règle au comptoir, et ce qu'il faut faire dire au client."},
+  hotline: {lbl:'Hotline', aud:'hotline', dir:"AUDIENCE DE L'UTILISATEUR : HOTLINER AU TÉLÉPHONE (sans l'appareil en main). Soigne en priorité guidage_distance.questions_fermees (dans l'ordre, chacune avec sa décision), puis a_faire_faire_au_client, puis si_non_resolu."},
+  rcd: {lbl:'RCD', aud:'rcd', dir:"AUDIENCE DE L'UTILISATEUR : RCD, COMPTOIR DISTANT (conseiller au téléphone qui doit résoudre à distance pour éviter le dépôt de l'appareil en magasin). COMMENCE PAR CE QUI EST FAISABLE PAR LE CLIENT, TOUT DE SUITE, CHEZ LUI : soigne en priorité guidage_distance.a_faire_faire_au_client (gestes du plus rapide et plus probable au moins probable, phrases à lire au client), puis si_resolu, puis questions_fermees. Dans plan_action, place d'abord les étapes réalisables par le client sans outil. Vocabulaire du quotidien."}
+};
+function ovdModeDepuisAudience(){
+  try{
+    if(typeof aiGetAudience === 'function'){
+      const a = aiGetAudience();
+      for(const k in OVD_MODES){ if(OVD_MODES[k].aud === a) return k; }
+    }
+  }catch(e){}
+  return mode;
+}
+const OVD_GD_TITRES = {
+  rcd:'📞 Solution à distance : à faire faire au client',
+  hotline:'📞 Guidage téléphonique',
+  magasin:'🗣 À faire faire et à dire au client',
+  atelier:'📞 Guidage à distance (hotline et RCD)'
+};
+const OVD_GD_ORDRE = {
+  rcd:['gestes','ok','questions','ko','non'],
+  hotline:['questions','gestes','ko','ok','non'],
+  magasin:['gestes','questions','ok','ko','non'],
+  atelier:['gestes','questions','ok','ko','non']
+};
+function ovdGuidageDonnees(f){
+  if(!f) return null;
+  const g = f.guidage_distance || null;
+  const gestes = ((g && Array.isArray(g.a_faire_faire_au_client)) ? g.a_faire_faire_au_client : [])
+    .map(function(x){ return typeof x === 'string' ? {geste:x, resultat_attendu:''} : (x || {}); })
+    .filter(function(x){ return x.geste; });
+  const questions = ((g && Array.isArray(g.questions_fermees)) ? g.questions_fermees : [])
+    .map(function(q){ return typeof q === 'string' ? {question:q} : (q || {}); })
+    .filter(function(q){ return q.question; });
+  if(gestes.length || questions.length){
+    return {gestes:gestes, questions:questions, si_resolu:g.si_resolu || '', si_non_resolu:g.si_non_resolu || '',
+      a_ne_pas_faire:Array.isArray(g.a_ne_pas_faire) ? g.a_ne_pas_faire.filter(Boolean) : [], reconstruit:false};
+  }
+  /* Fiche sans guidage (historique) : reconstruction prudente depuis le plan d'action */
+  const gr = [];
+  (f.plan_action || []).forEach(function(et){
+    if(et && String(et.cout) === '0' && gr.length < 5){
+      gr.push({geste:(et.titre ? et.titre + ' : ' : '') + (et.instructions || []).join(' ; '), resultat_attendu:et.critere_go || ''});
+    }
+  });
+  const qr = ((f.meta && f.meta.elements_manquants_pour_affiner) || []).slice(0, 4).map(function(q){ return {question:q}; });
+  if(!gr.length && !qr.length) return null;
+  const sc = ((f.verdict_global && f.verdict_global.scenarios) || []).filter(function(x){ return /atelier|pi[eè]ce/i.test((x && x.type_verdict) || ''); })[0];
+  return {gestes:gr, questions:qr, si_resolu:'',
+    si_non_resolu: sc ? 'Si les gestes ne suffisent pas : proposer un dépôt en magasin (' + (sc.description || sc.type_verdict) + ').' : '',
+    a_ne_pas_faire:[], reconstruit:true};
+}
+function ovdGuidageSection(f){
+  const g = ovdGuidageDonnees(f);
+  if(!g) return '';
+  const B = {
+    gestes: g.gestes.length ? '<div class="ovd-gd-bloc ovd-gd-gestes"><div class="ovd-gd-t">✅ À faire faire au client, dans cet ordre</div><ol class="ovd-gd-list">' +
+      g.gestes.map(function(x){ return '<li><span class="ovd-gd-geste">' + esc(x.geste) + '</span>' + (x.resultat_attendu ? '<span class="ovd-gd-res">→ ' + esc(x.resultat_attendu) + '</span>' : '') + '</li>'; }).join('') + '</ol></div>' : '',
+    questions: g.questions.length ? '<div class="ovd-gd-bloc ovd-gd-questions"><div class="ovd-gd-t">❓ Questions fermées à poser</div><ol class="ovd-gd-list">' +
+      g.questions.map(function(q){
+        const d = [];
+        if(q.si_oui) d.push('<b>Oui</b> → ' + esc(q.si_oui));
+        if(q.si_non) d.push('<b>Non</b> → ' + esc(q.si_non));
+        return '<li><span class="ovd-gd-q">' + esc(q.question) + '</span>' + (d.length ? '<span class="ovd-gd-dec">' + d.join(' · ') + '</span>' : '') + '</li>';
+      }).join('') + '</ol></div>' : '',
+    ok: g.si_resolu ? '<div class="ovd-gd-bloc ovd-gd-ok"><div class="ovd-gd-t">👍 Si c\'est résolu</div><p>' + esc(g.si_resolu) + '</p></div>' : '',
+    ko: g.si_non_resolu ? '<div class="ovd-gd-bloc ovd-gd-ko"><div class="ovd-gd-t">🏪 Si ce n\'est pas résolu</div><p>' + esc(g.si_non_resolu) + '</p></div>' : '',
+    non: g.a_ne_pas_faire.length ? '<div class="ovd-gd-bloc ovd-gd-non"><div class="ovd-gd-t">⛔ À ne pas faire faire au client</div><ul>' +
+      g.a_ne_pas_faire.map(function(x){ return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div>' : ''
+  };
+  let corps = (OVD_GD_ORDRE[mode] || OVD_GD_ORDRE.atelier).map(function(k){ return B[k]; }).join('');
+  if(g.reconstruit) corps = '<div class="ovd-gd-note">Guidage reconstruit à partir du plan d\'action : relancez l\'analyse pour obtenir le guidage téléphonique complet.</div>' + corps;
+  const copier = '<button type="button" class="ovd-btn ovd-gd-copy" onclick="OVD.copierGuidage()">📋 Copier le guidage</button>';
+  if(mode === 'atelier'){
+    return '<details class="ovd-fiche-section ovd-guidage ovd-guidage-replie"><summary>' + esc(OVD_GD_TITRES.atelier) + '</summary><div class="ovd-gd-head"><span></span>' + copier + '</div>' + corps + '</details>';
+  }
+  return '<div class="ovd-fiche-section ovd-guidage ovd-guidage-' + mode + '"><div class="ovd-gd-head"><div class="ovd-section-label">' + esc(OVD_GD_TITRES[mode] || OVD_GD_TITRES.atelier) + '</div>' + copier + '</div>' + corps + '</div>';
+}
+function ovdGuidageTexte(f){
+  const g = ovdGuidageDonnees(f);
+  if(!g) return '';
+  const S = {
+    gestes: g.gestes.length ? 'À FAIRE FAIRE AU CLIENT, DANS CET ORDRE :\n' + g.gestes.map(function(x, i){ return (i + 1) + '. ' + x.geste + (x.resultat_attendu ? '\n   → ' + x.resultat_attendu : ''); }).join('\n') : '',
+    questions: g.questions.length ? 'QUESTIONS FERMÉES À POSER :\n' + g.questions.map(function(q, i){ return (i + 1) + '. ' + q.question + (q.si_oui ? '\n   Oui → ' + q.si_oui : '') + (q.si_non ? '\n   Non → ' + q.si_non : ''); }).join('\n') : '',
+    ok: g.si_resolu ? 'SI C\'EST RÉSOLU : ' + g.si_resolu : '',
+    ko: g.si_non_resolu ? 'SI CE N\'EST PAS RÉSOLU : ' + g.si_non_resolu : '',
+    non: g.a_ne_pas_faire.length ? 'À NE PAS FAIRE FAIRE AU CLIENT :\n' + g.a_ne_pas_faire.map(function(x){ return '- ' + x; }).join('\n') : ''
+  };
+  const tete = (OVD_GD_TITRES[mode] || OVD_GD_TITRES.atelier).replace(/^\S+\s/, '').toUpperCase() +
+    (f.decodage && f.decodage.reformulation ? '\n' + f.decodage.reformulation : '');
+  return [tete].concat((OVD_GD_ORDRE[mode] || OVD_GD_ORDRE.atelier).map(function(k){ return S[k]; })).filter(Boolean).join('\n\n');
+}
+function ovdCopierTexte(t, msg){
+  const ok = function(){ toast(msg, 'success'); };
+  const repli = function(){
+    try{
+      const ta = document.createElement('textarea');
+      ta.value = t; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); ok();
+    }catch(e){ toast('Copie impossible', 'error'); }
+  };
+  if(navigator.clipboard && window.isSecureContext){ navigator.clipboard.writeText(t).then(ok, repli); } else repli();
+}
+function copierGuidage(){
+  if(!currentFiche){ toast('Aucune fiche', 'error'); return; }
+  const t = ovdGuidageTexte(currentFiche);
+  if(!t){ toast('Pas de guidage pour cette fiche', 'error'); return; }
+  ovdCopierTexte(t, 'Guidage copié');
+}
 let currentFiche = null;
 let currentVerbatim = '';
 let pendingAuth = null;
@@ -27584,6 +29720,8 @@ const SYSTEM_PROMPT = `Tu es un référent SAV PEM expérimenté chez Fnac Darty
     "premiere_action_recommandee":"string",
     "alerte_indice_fort":"string ou null"
   },
+  "procedure_application":{"concernee":false,"application":"string ou null","etapes":["string"],"ou_voir_illustration":"string ou null"},
+  "guidage_distance":{"a_faire_faire_au_client":[{"geste":"string","resultat_attendu":"string"}],"questions_fermees":[{"question":"string","si_oui":"string","si_non":"string"}],"si_resolu":"string","si_non_resolu":"string","a_ne_pas_faire":["string"]},
   "meta":{
     "regime_diagnostic":"verbatim_seul|code_erreur_present|mixte",
     "confiance_globale":"forte|moyenne|faible",
@@ -27599,7 +29737,9 @@ const SYSTEM_PROMPT = `Tu es un référent SAV PEM expérimenté chez Fnac Darty
 - Si le verbatim mentionne un code erreur, démarre par ce code et meta.regime_diagnostic = "code_erreur_present".
 - Adapte le niveau de jargon : neutre et clair.
 - Si tu hésites entre deux hypothèses, mets-les avec même probabilité et explique l'arbitrage dans justification.
-- Détecte la marque et la famille produit depuis le verbatim si possible (meta.marque_detectee / meta.famille_detectee).`;
+- Détecte la marque et la famille produit depuis le verbatim si possible (meta.marque_detectee / meta.famille_detectee).
+- Si le verbatim concerne l'application ou une manipulation (appairage, Wi-Fi, carte, zones, programmation, mise à jour, réinitialisation, partage), remplis procedure_application (concernee = true) avec les étapes EXACTES dans l'application du constructeur pour ce modèle ; sinon concernee = false et etapes = []. N'écris jamais d'URL : le programme affiche les liens officiels.
+- Remplis TOUJOURS guidage_distance : c'est la fiche du conseiller hotline ou RCD (comptoir distant) qui résout au téléphone pour éviter le dépôt de l'appareil en magasin. a_faire_faire_au_client = 3 à 6 gestes réalisables par le client chez lui, sans outil ni démontage, du plus rapide et plus probable au moins probable, chacun rédigé comme une phrase à lire au client, avec le resultat_attendu qui prouve que c'est réglé. questions_fermees = 2 à 4 questions fermées dans l'ordre, chacune avec la décision si_oui et si_non. si_resolu = phrase de conclusion pour le client + consommable à prévoir si l'usure est en cause. si_non_resolu = orientation (dépôt magasin ou atelier) et ce que le client apporte (appareil, station ou base, accessoires, preuve d'achat). a_ne_pas_faire = gestes à ne jamais faire faire au client. Ne demande jamais au client d'ouvrir l'appareil ni de manipuler la batterie.`;
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -27964,6 +30104,16 @@ async function analyze(){
     if(ctxM) prompt += '\n\nMARQUE (donnée par utilisateur) : '+ctxM;
     if(ctxF) prompt += '\n\nFAMILLE PRODUIT (donnée par utilisateur) : '+ctxF;
     if(ctxC) prompt += '\n\nCODE ERREUR PRESENT : '+ctxC;
+    /* V3.01 — procédure application + liens notice (registre OVPEM_NOTICES) */
+    const _ovnQ = {texte: v + (ctxC ? ' ' + ctxC : ''), marque: ctxM || ''};
+    try{
+      if(typeof window.ovpemNoticeResoudre === 'function'){
+        const _ovnRes = window.ovpemNoticeResoudre(_ovnQ.texte, {marque: _ovnQ.marque});
+        if(window.ovpemNoticePertinent(_ovnRes)) prompt += '\n\n' + window.ovpemNoticePromptBloc(_ovnRes, {mode:'json'});
+      }
+    }catch(e){ console.warn('[V3.01] notice OVD', e); }
+    /* V3.02 — audience de l'utilisateur (Atelier, Magasin, Hotline, RCD) */
+    if(OVD_MODES[mode]) prompt += '\n\n' + OVD_MODES[mode].dir;
     $('ovd-loading-msg').textContent = 'Appel IA — éclatement en sous-symptômes…';
     const raw = await callAI(prompt);
     let f = tryParseJSON(raw);
@@ -27978,6 +30128,8 @@ async function analyze(){
     f._source = matches.length>0 ? 'cas_connu+ia' : 'ia';
     f._cas_matches = matches;
     f._ctx = ctx;
+    f._mode = mode;
+    f._noticeQ = {texte: _ovnQ.texte, marque: ctx.marque || ''};
     currentFiche = f;
     pushLog({ts:Date.now(),verbatim:v,contexte:ctx,signature:ss.map(function(s){return s.libelle}),fiche:f,status:'open'});
     render(f);
@@ -27990,10 +30142,38 @@ async function analyze(){
   }
 }
 
+/* V3.01 — Procédure dans l'application + liens directs notice (après le décodage) */
+function ovdNoticeSection(f){
+  if(typeof window.ovpemNoticeResoudre !== 'function') return '';
+  const q = f._noticeQ || {texte: currentVerbatim || '', marque: (f._ctx && f._ctx.marque) || ''};
+  const res = window.ovpemNoticeResoudre(q.texte || '', {marque: q.marque || ''});
+  const pa = f.procedure_application || null;
+  const etapes = (pa && pa.concernee !== false && Array.isArray(pa.etapes)) ? pa.etapes.filter(Boolean) : [];
+  if(!etapes.length && !window.ovpemNoticePertinent(res)) return '';
+  const appSujet = etapes.length > 0 || window.ovpemNoticeEstApp(res);
+  let h = '<div class="ovd-fiche-section ovn-ovd-section">';
+  h += '<div class="ovd-section-label">Procédure application &amp; notice officielle</div>';
+  if(etapes.length){
+    const app = (pa && pa.application) || (res.marque ? res.marque.app : "l'application");
+    h += '<div class="ovn-proc"><div class="ovn-proc-t">📱 Étapes dans ' + esc(app) + '</div><ol class="ovn-proc-list">';
+    etapes.forEach(function(e){ h += '<li>' + esc(e) + '</li>'; });
+    h += '</ol>';
+    if(pa.ou_voir_illustration) h += '<div class="ovn-proc-illu">🖼 Illustration : ' + esc(pa.ou_voir_illustration) + '</div>';
+    h += '</div>';
+  }
+  h += window.ovpemNoticePanelHtml(res, {replie: !appSujet});
+  h += '</div>';
+  return h;
+}
+
 function render(f){
   const body = $('ovd-fiche-body');
   $('ovd-result-source').textContent = f._source==='cas_connu+ia' ? 'Source · Cas connu + IA / Constructeurs / SAV' : 'Source · IA / Constructeurs / SAV';
   const h = [];
+  /* V3.02 — guidage à distance : en tête pour la hotline et le RCD */
+  let _gd = '';
+  try{ _gd = ovdGuidageSection(f); }catch(e){ console.warn('[V3.02] guidage', e); }
+  if(mode === 'rcd' || mode === 'hotline') h.push(_gd);
   h.push('<div class="ovd-fiche-section">');
   h.push('<div class="ovd-section-label">Décodage du symptôme</div>');
   h.push('<div class="ovd-reformulation">'+esc(f.decodage.reformulation||'—')+'</div>');
@@ -28010,6 +30190,8 @@ function render(f){
     h.push('</ul>');
   }
   h.push('</div>');
+  if(mode === 'magasin') h.push(_gd);
+  try{ h.push(ovdNoticeSection(f)); }catch(e){ console.warn('[V3.01] section notice', e); }
   if(f.tri_hypotheses && f.tri_hypotheses.length){
     h.push('<div class="ovd-fiche-section ovd-section-tri">');
     h.push('<div class="ovd-section-label">Tri Usage vs Technique</div>');
@@ -28094,14 +30276,23 @@ function render(f){
     });
     h.push('</div>');
   }
+  if(mode === 'atelier') h.push(_gd);
   body.innerHTML = h.join('');
-  body.className = 'ovd-panel-body' + (mode==='magasin' ? ' ovd-magasin-mode' : '');
+  body.className = 'ovd-panel-body' + (mode !== 'atelier' ? ' ovd-magasin-mode' : '') + ' ovd-mode-' + mode;
 }
 
-function setMode(m){
+function setMode(m, silencieux){
+  if(!OVD_MODES[m]) m = 'atelier';
   mode = m;
   const btns = document.querySelectorAll('.ovd-mode-toggle button');
-  for(let i=0;i<btns.length;i++){btns[i].classList.toggle('on', btns[i].dataset.mode === m)}
+  for(let i=0;i<btns.length;i++){
+    const on = btns[i].dataset.mode === m;
+    btns[i].classList.toggle('on', on);
+    btns[i].setAttribute('aria-pressed', on ? 'true' : 'false');
+  }
+  /* V3.02 — même choix d'audience que le Référent Virtuel */
+  if(!silencieux){ try{ if(typeof aiSetAudience === 'function') aiSetAudience(OVD_MODES[m].aud); }catch(e){} }
+  try{ if(window.ovdAide) window.ovdAide.modeChange(m); }catch(e){}
   if(currentFiche) render(currentFiche);
 }
 
@@ -28109,6 +30300,7 @@ function clearAll(){
   $('ovd-verbatim').value=''; $('ovd-marque').value=''; $('ovd-famille').value=''; $('ovd-code').value='';
   $('ovd-result').classList.remove('show');
   currentFiche = null; currentVerbatim = '';
+  try{ if(window.ovdAide) window.ovdAide.maj(); }catch(e){}
 }
 
 function markStatus(s){
@@ -28133,6 +30325,8 @@ function ficheToMD(f, v){
   const l = [];
   l.push('# Décodeur Verbatim PEM — Fiche de diagnostic\n');
   l.push('**Verbatim :** '+v+'\n');
+  /* V3.02 — guidage à distance en tête pour la hotline et le RCD */
+  if(mode === 'rcd' || mode === 'hotline'){ try{ const _gt = ovdGuidageTexte(f); if(_gt) l.push('## Guidage à distance\n\n' + _gt + '\n'); }catch(e){} }
   l.push('## 1. Décodage du symptôme\n');
   l.push('**Reformulation :** '+f.decodage.reformulation+'\n');
   if(f.decodage.sous_symptomes && f.decodage.sous_symptomes.length){
@@ -28179,6 +30373,27 @@ function ficheToMD(f, v){
     });
     if(f.verdict_global.premiere_action_recommandee) l.push('\n**→ Première action :** '+f.verdict_global.premiere_action_recommandee+'\n');
   }
+  /* V3.01 — procédure application + liens officiels vérifiés */
+  try{
+    const pa = f.procedure_application;
+    if(pa && pa.concernee !== false && pa.etapes && pa.etapes.length){
+      l.push('## 5. Procédure dans l\'application' + (pa.application ? ' ' + pa.application : '') + '\n');
+      pa.etapes.forEach(function(e, i){ l.push((i + 1) + '. ' + e); });
+      if(pa.ou_voir_illustration) l.push('\n*Illustration : ' + pa.ou_voir_illustration + '*');
+      l.push('');
+    }
+    if(typeof window.ovpemNoticeLiensOfficiels === 'function'){
+      const q = f._noticeQ || {texte: v, marque: (f._ctx && f._ctx.marque) || ''};
+      const liens = window.ovpemNoticeLiensOfficiels(window.ovpemNoticeResoudre(q.texte || '', {marque: q.marque || ''}));
+      if(liens.length){
+        l.push('## 6. Liens officiels (notice et aide constructeur)\n');
+        liens.forEach(function(x){ l.push('- ' + x.t + ' : ' + x.brut); });
+        l.push('');
+      }
+    }
+    /* V3.02 — guidage à distance (atelier, magasin) */
+    if(mode !== 'rcd' && mode !== 'hotline'){ const _gt = ovdGuidageTexte(f); if(_gt) l.push('## 7. Guidage à distance (hotline et RCD)\n\n' + _gt + '\n'); }
+  }catch(e){}
   return l.join('\n');
 }
 
@@ -28225,6 +30440,8 @@ function ficheToPrintHTML(f, v){
   P.push('<h1>🧩 Fiche de diagnostic — Décodeur Verbatim PEM</h1>');
   P.push('<div class="meta">Généré le '+new Date().toLocaleString('fr-FR')+' · Source · '+esc(src)+'</div>');
   if(v) P.push('<div class="verbatim">« '+esc(v)+' »</div>');
+  /* V3.02 — guidage à distance en tête (magasin, hotline, RCD) */
+  if(mode !== 'atelier'){ try{ const _gp = ovdGuidageTexte(f); if(_gp) P.push('<h2>📞 Guidage à distance</h2><div style="white-space:pre-wrap;background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:8px 10px;margin:0 0 12px;">' + esc(_gp) + '</div>'); }catch(e){} }
   if(f.decodage){
     P.push('<h2>1. Décodage du symptôme</h2>');
     if(f.decodage.reformulation) P.push('<p><strong>Reformulation :</strong> '+esc(f.decodage.reformulation)+'</p>');
@@ -28492,6 +30709,10 @@ function openApp(){
   updateProviderTag();
   refreshHistCount();
   $('ovd-app').classList.add('show');
+  /* V3.02 — audience partagée avec le Référent Virtuel + aide à la description */
+  try{ setMode(ovdModeDepuisAudience(), true); if(window.ovdAide) window.ovdAide.init(); }catch(e){ console.warn('[V3.02] ouverture', e); }
+  /* V3.01 — la fenêtre s'ouvre en haut : la phrase d'accueil (profil RCD) est visible d'emblée */
+  try{ if(typeof window.ovpemAccueilInstall === 'function') window.ovpemAccueilInstall(); const _b = document.querySelector('#ovd-app .ovd-app-body'); if(_b) _b.scrollTop = 0; }catch(e){}
   // tracking stats — compatibilité avec compteur OVPEM existant
   try{
     if(typeof window.aiChatRequests !== 'undefined'){/* compteur partagé, pas d'incrément ici car non IA-trigger */}
@@ -28517,6 +30738,7 @@ window.OVD = {
   openConfig: openConfig, closeConfig: closeConfig, saveConfig: saveConfig,
   toggleHistory: toggleHistory, exportLogJSON: exportLogJSON, importLogJSON: importLogJSON, clearLog: clearLog, reloadHist: reloadHist,
   closeAuth: closeAuth, submitAuth: submitAuth,
+  copierGuidage: copierGuidage, getMode: function(){ return mode; }, _guidageTexte: ovdGuidageTexte,
   _version: OVD_VERSION, _initialized: false
 };
 
@@ -28624,7 +30846,9 @@ function applyProfile(prof){
   try{ if(typeof setMode==='function') setMode(prof==='novice'?'magasin':'atelier'); }catch(e){}
   const g=document.getElementById('profileGate');
   if(g){ g.classList.add('gate-hide'); setTimeout(function(){g.style.display='none';},360); }
-  (window.showPage||showPage)(prof==='novice' ? 'wizard' : 'home');
+  /* V3.03 — les deux profils arrivent sur le tableau de bord d'accueil */
+  try{ if(window.ovpemAccueil) window.ovpemAccueil.render(); }catch(e){ console.warn('[V3.03] accueil', e); }
+  (window.showPage||showPage)('home');
 }
 
 function applyNavVisibility(prof){
@@ -28664,7 +30888,7 @@ function renderProfileBadge(prof){
   }
   chip.className='profile-chip '+(prof==='novice'?'pc-novice':'pc-expert');
   chip.innerHTML=(prof==='novice'
-      ? '<span>🏪</span><span>Profil Magasin / Hotline</span>'
+      ? '<span>🏪</span><span><span class="pc-main">Magasin/Hotline/RCD</span><br><small class="pc-sub">Guidage rapide IA</small></span>'
       : '<span>🔧</span><span>Profil Atelier / Technicien</span>')
     +'<button class="pc-lock" title="Changer de profil / verrouiller" onclick="lockProfile()">⏏</button>';
 }
