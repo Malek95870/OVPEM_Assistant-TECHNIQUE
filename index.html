@@ -25,7 +25,7 @@
 })();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>OVPEM V3.21 – Guide Diagnostic SAV/Magasins</title>
+<title>OVPEM V3.27 – Guide Diagnostic SAV/Magasins</title>
 <style>
 /* ═══════════════════════════════════════════════════════════
    VARIABLES & BASE
@@ -4424,7 +4424,7 @@ body:not(.ovpem-ouvert){overflow:hidden}
       <div class="gate-chip"><div class="gc-ico">🏪</div><div class="gc-t">Magasin / Hotline / RCD</div><div class="gc-s">Guidage rapide IA</div></div>
       <div class="gate-chip"><div class="gc-ico">🔧</div><div class="gc-t">Atelier / Technicien</div><div class="gc-s">Accès complet</div></div>
     </div>
-    <div class="gate-foot">Outil Vérification PEM<br>🔒 Programme protégé · <span id="gateVersion">v3.21</span></div>
+    <div class="gate-foot">Outil Vérification PEM<br>🔒 Programme protégé · <span id="gateVersion">v3.27</span></div>
   </div>
 </div>
 
@@ -4501,7 +4501,7 @@ body:not(.ovpem-ouvert){overflow:hidden}
       <span style="font-size:13px;">⚙️</span>Paramètres Admin <span class="adm-lock-state" style="font-size:9px;opacity:.85;margin-left:2px;">🔒</span>
     </button>
     <div style="text-align:center;margin-top:8px;">
-      <span class="ovpem-version-badge" id="ovpemVersionBadge" title="Version d'OVPEM en cours d'utilisation. Cliquer pour vérifier les mises à jour.">v3.21</span>
+      <span class="ovpem-version-badge" id="ovpemVersionBadge" title="Version d'OVPEM en cours d'utilisation. Cliquer pour vérifier les mises à jour.">v3.27</span>
     </div>
   </div>
   <div class="sidebar-footer">SAV/Magasins – Usage interne</div>
@@ -12108,7 +12108,7 @@ ovpemMigratePasswordsToHash();
    - Configuration de l'URL dans le panneau admin
    - Cache busting pour forcer le refresh
    ═══════════════════════════════════════════════════════════ */
-const OVPEM_VERSION = "3.21";
+const OVPEM_VERSION = "3.27";
 const OVPEM_BUILD_DATE = "2026-09-15";
 /* V3.01 — la page de login affiche la version depuis la constante (plus de libellé figé) */
 try{ (function(){ var gv = document.getElementById('gateVersion'); if(gv) gv.textContent = 'v' + OVPEM_VERSION; })(); }catch(e){}
@@ -16763,7 +16763,6 @@ window.addEventListener('DOMContentLoaded', () => {
       <div class="ai-tabs">
         <button class="ai-tab" data-tab="constructeur" onclick="aiSetTab('constructeur')">🌐 Diagnostic constructeurs</button>
         <button class="ai-tab active" data-tab="chat" onclick="aiSetTab('chat')">💬 Diagnostic IA</button>
-        <button class="ai-tab-cfg" onclick="aiOpenConfig()" title="Configurer ma clé API Gemini">⚙️</button>
       </div>
 
       <!-- ═══════════ ONGLET 1 : RECHERCHE CONSTRUCTEURS (par défaut) ═══════════ -->
@@ -16936,14 +16935,6 @@ window.addEventListener('DOMContentLoaded', () => {
         </div>
       </div>
 
-      <!-- Recommandation -->
-      <div class="ai-cfg-reco">
-        <div class="ai-cfg-reco-head">🏆 <b>Recommandation : Google Gemini</b></div>
-        <div class="ai-cfg-reco-body">
-          <b>Gemini 2.0 Flash</b> est la meilleure option pour OVPEM : <b>gratuit jusqu'à ~1 500 requêtes/jour</b>, sans carte bancaire requise, qualité de diagnostic équivalente aux concurrents. Claude et ChatGPT exigent une carte bancaire et un abonnement payant dès la première requête.
-        </div>
-      </div>
-
       <!-- Sélection du fournisseur actif -->
       <div class="ai-cfg-field">
         <label>🤖 Fournisseur IA actif <span style="font-size:10px;color:var(--text3);">— quel fournisseur sera utilisé pour les requêtes</span></label>
@@ -16951,22 +16942,22 @@ window.addEventListener('DOMContentLoaded', () => {
           <label class="ai-provider-chip" data-provider="gemini">
             <input type="radio" name="aiProvider" value="gemini" onchange="aiCfgSetActiveProvider('gemini')">
             <div class="apc-body">
-              <div class="apc-title">🟢 Google Gemini <span class="apc-badge apc-badge-best">RECOMMANDÉ</span></div>
-              <div class="apc-sub">Gratuit ~1 500 req/jour · Pas de CB</div>
+              <div class="apc-title">🟢 Google Gemini</div>
+              
             </div>
           </label>
           <label class="ai-provider-chip" data-provider="claude">
             <input type="radio" name="aiProvider" value="claude" onchange="aiCfgSetActiveProvider('claude')">
             <div class="apc-body">
-              <div class="apc-title">🟣 Anthropic Claude <span class="apc-badge apc-badge-paid">PAYANT</span></div>
-              <div class="apc-sub">CB obligatoire · ~0,80 $/M tokens</div>
+              <div class="apc-title">🟣 Anthropic Claude</div>
+              
             </div>
           </label>
           <label class="ai-provider-chip" data-provider="openai">
             <input type="radio" name="aiProvider" value="openai" onchange="aiCfgSetActiveProvider('openai')">
             <div class="apc-body">
-              <div class="apc-title">🟢 OpenAI ChatGPT <span class="apc-badge apc-badge-paid">PAYANT</span></div>
-              <div class="apc-sub">CB obligatoire · ~0,15 $/M tokens</div>
+              <div class="apc-title">🟢 OpenAI ChatGPT</div>
+              
             </div>
           </label>
         </div>
@@ -16985,15 +16976,15 @@ window.addEventListener('DOMContentLoaded', () => {
         <div class="ai-cfg-steps">
           <b>🚀 Obtenir une clé Gemini (2 minutes, gratuit) :</b>
           <ol>
-            <li>Allez sur <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer"><b>aistudio.google.com/app/apikey</b></a></li>
+            <li>Allez sur <a href="https://aistudio.google.com/api-keys" target="_blank" rel="noopener noreferrer"><b>aistudio.google.com/api-keys</b></a></li>
             <li>Connectez-vous avec votre compte Google</li>
             <li>Cliquez sur <b>« Create API key »</b></li>
-            <li>Copiez la clé (commence par <code>AIza…</code>)</li>
+            <li>Copiez la clé : AI Studio délivre désormais des clés d'authentification qui commencent par <code>AQ.</code> ; les anciennes clés <code>AIza…</code> restent acceptées ici tant que Google les honore</li>
           </ol>
         </div>
         <div class="ai-cfg-field ai-cfg-localkey">
           <label for="aiCfgKey">🔑 Clé API Gemini</label>
-          <input type="text" id="aiCfgKey" class="ai-cfg-input" placeholder="AIzaSy..." autocomplete="off">
+          <input type="text" id="aiCfgKey" class="ai-cfg-input" placeholder="AQ.Ab… ou AIzaSy…" autocomplete="off">
           <div class="ai-cfg-row">
             <label class="ai-cfg-check">
               <input type="checkbox" id="aiCfgShow" onchange="aiToggleKeyVisibility('aiCfgKey','aiCfgShow')">
@@ -17001,14 +16992,25 @@ window.addEventListener('DOMContentLoaded', () => {
             </label>
             <span class="ai-cfg-status ok" id="aiCfgStatus">✓ Clé enregistrée avec succès</span>
           </div>
+          <!-- V3.22 — vérification immédiate de la clé et du réseau -->
+          <div class="ai-cfg-row" style="margin-top:8px;gap:8px;flex-wrap:wrap;">
+            <button type="button" class="ai-cfg-test" onclick="ovpemTesterCleIA()">🧪 Tester la clé</button>
+            <span class="ai-cfg-testres" id="aiCfgTestRes"></span>
+          </div>
         </div>
         <div class="ai-cfg-field">
           <label for="aiCfgModel">🧠 Modèle Gemini</label>
           <select id="aiCfgModel" class="ai-cfg-input" onchange="aiSaveModelOnly('gemini')">
-            <option value="gemini-2.0-flash">Gemini 2.0 Flash (recommandé · rapide · gratuit)</option>
-            <option value="gemini-2.5-flash">Gemini 2.5 Flash (plus récent · gratuit limité)</option>
-            <option value="gemini-1.5-flash">Gemini 1.5 Flash (stable · gratuit)</option>
+            <option value="gemini-3.8-flash">Gemini 3.8 Flash (recommandé · rapide)</option>
+            <option value="gemini-3.7-flash">Gemini 3.7 Flash</option>
+            <option value="gemini-3.6-flash">Gemini 3.6 Flash</option>
+            <option value="gemini-3.5-flash">Gemini 3.5 Flash</option>
+            <option value="gemini-3.5-flash-lite">Gemini 3.5 Flash-Lite (le plus économe)</option>
           </select>
+          <div class="ai-cfg-row" style="margin-top:8px;gap:8px;flex-wrap:wrap;">
+            <button type="button" class="ai-cfg-test" onclick="ovpemChargerModeles()">📥 Charger les modèles de mon compte</button>
+            <span class="ai-cfg-testres" id="aiCfgModelesRes"></span>
+          </div>
         </div>
         <div class="ai-cfg-row ai-cfg-localkey" style="justify-content:flex-end;gap:8px;">
           <button class="btn-contrib-cancel" onclick="aiClearKey('gemini')" style="color:#ef4444;">🗑 Supprimer</button>
@@ -17018,9 +17020,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
       <!-- ═══════ CLAUDE ═══════ -->
       <div class="aict-pane" id="aictPaneClaude" style="display:none;">
-        <div class="ai-cfg-warn-paid">
-          ⚠️ <b>Anthropic Claude nécessite une carte bancaire</b> et facture dès la première requête. Pas de quota gratuit. À choisir uniquement si vous avez un budget dédié ou un compte Anthropic déjà crédité.
-        </div>
         <div class="ai-cfg-steps">
           <b>🚀 Obtenir une clé Claude :</b>
           <ol>
@@ -17057,9 +17056,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
       <!-- ═══════ OPENAI ═══════ -->
       <div class="aict-pane" id="aictPaneOpenai" style="display:none;">
-        <div class="ai-cfg-warn-paid">
-          ⚠️ <b>OpenAI ChatGPT nécessite une carte bancaire</b> et un crédit pré-payé minimum (~5 $). Pas de quota gratuit. À choisir uniquement si vous avez un budget dédié ou un compte OpenAI déjà crédité.
-        </div>
         <div class="ai-cfg-steps">
           <b>🚀 Obtenir une clé OpenAI :</b>
           <ol>
@@ -17467,7 +17463,7 @@ window.addEventListener('DOMContentLoaded', () => {
         <div class="ast-dash-info">
           <div class="ast-dash-section-title">Informations système</div>
           <table class="ast-dash-info-table">
-            <tr><td>Version</td><td><b id="astDashVersionCell">OVPEM V3.21</b></td></tr>
+            <tr><td>Version</td><td><b id="astDashVersionCell">OVPEM V3.27</b></td></tr>
             <tr><td>Stockage local utilisé</td><td id="astDashStorageSize">— Ko</td></tr>
             <tr><td>Marques masquées</td><td id="astDashBrandsHidden">0</td></tr>
             <tr><td>Mots de passe par défaut</td><td id="astDashPwdStatus">—</td></tr>
@@ -17583,6 +17579,11 @@ window.addEventListener('DOMContentLoaded', () => {
 
       <!-- TAB ÉDITION INLINE -->
       <div class="ast-pane" id="astPaneSync" style="display:none;">
+        <!-- V3.25 — les réglages IA se font ici, avec le même mot de passe que la synchronisation -->
+        <div class="ast-intro" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+          <span><b>🤖 Réglages de l'IA.</b> Fournisseur, clé API et modèle : tout se configure ici, et plus depuis le Décodeur ni le Référent Virtuel.</span>
+          <button type="button" class="ai-cfg-test" style="margin-left:auto;" onclick="ovpemReglagesIA()">⚙️ Ouvrir les réglages IA</button>
+        </div>
         <div class="ast-intro">
           <b>🌐 Synchronisation cloud des données OVPEM.</b><br>
           Partage les contributions, stats, paramètres admin et modifications inline entre plusieurs postes via un backend cloud. Trois providers au choix :
@@ -18261,7 +18262,7 @@ function aiSetContextChip(brand, symptom){
 
 /* Clés localStorage par fournisseur */
 const AI_LS = {
-  gemini: { key:'ovpem_gemini_api_key', model:'ovpem_gemini_model', defaultModel:'gemini-2.0-flash' },
+  gemini: { key:'ovpem_gemini_api_key', model:'ovpem_gemini_model', defaultModel:'gemini-3.8-flash' },
   claude: { key:'ovpem_claude_api_key', model:'ovpem_claude_model', defaultModel:'claude-haiku-4-5-20251001' },
   openai: { key:'ovpem_openai_api_key', model:'ovpem_openai_model', defaultModel:'gpt-4o-mini' }
 };
@@ -18275,7 +18276,8 @@ const AI_DEFAULT_MODEL = AI_LS.gemini.defaultModel;
 
 /* Patterns de validation simples par fournisseur */
 const AI_KEY_PATTERNS = {
-  gemini: /^AIza[0-9A-Za-z_\-]{10,}$/,
+  /* V3.24 — AI Studio délivre des clés d'authentification « AQ. » ; les anciennes « AIza » restent acceptées */
+  gemini: /^(AIza|AQ\.)[0-9A-Za-z_\-.]{10,}$/,
   claude: /^sk-ant-[0-9A-Za-z_\-]{10,}$/,
   openai: /^sk-[0-9A-Za-z_\-]{10,}$/
 };
@@ -18589,7 +18591,7 @@ function aiSaveKey(provider){
   }
   const pattern = AI_KEY_PATTERNS[provider];
   if(pattern && !pattern.test(key)){
-    const expected = provider === 'gemini' ? 'AIza…' : provider === 'claude' ? 'sk-ant-…' : 'sk-…';
+    const expected = provider === 'gemini' ? 'AQ.… ou AIza…' : provider === 'claude' ? 'sk-ant-…' : 'sk-…';
     if(status){ status.textContent = '✗ Format invalide (doit commencer par ' + expected + ')'; status.className = 'ai-cfg-status ko'; }
     return;
   }
@@ -19448,7 +19450,7 @@ function ovpemSchemaOpen(key){
   });
   lg += '</div>';
   bd.innerHTML = desc + s.svg + lg +
-    '<div class="schv-foot"><span>OVPEM v' + (typeof OVPEM_VERSION !== 'undefined' ? OVPEM_VERSION : '3.21') +
+    '<div class="schv-foot"><span>OVPEM v' + (typeof OVPEM_VERSION !== 'undefined' ? OVPEM_VERSION : '3.27') +
     ' · Schéma générique — se référer à l\u2019éclaté du modèle avant commande.</span>' +
     '<button class="schv-print" onclick="ovpemSchemaPrint()">🖨 Imprimer</button></div>';
   ov.classList.add('show');
@@ -19706,7 +19708,7 @@ async function aiChatSend(){
 
     // V2.89 — prompt systeme construit dynamiquement : audience + base technique
     // ciblee sur les mots-cles de la demande + listes fermees de cles media.
-    const _aiOpts = { system: aiBuildSystemPrompt(fullUserMsg), maxTokens: 2048 };
+    const _aiOpts = { system: aiBuildSystemPrompt(fullUserMsg), maxTokens: ovpemBudgetTokens(2048) };
 
     /* V2.91 — bascule automatique : fournisseur actif → autres clés → Copilot.
        _onStatus met à jour le message d'attente pendant les tentatives. */
@@ -19785,7 +19787,8 @@ async function _aiCallGemini(apiKey, model, history, options){
     role: (m.role === 'assistant') ? 'model' : 'user',
     parts: [{text: m.text}]
   }));
-  const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent?key=' + encodeURIComponent(apiKey);
+  /* V3.23 — la clé passe par l'en-tête x-goog-api-key : seule méthode acceptée par les clés « AQ. » d'AI Studio */
+  const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent';
   const genConfig = { temperature: 0.4, maxOutputTokens: options.maxTokens || 1024, topP: 0.9 };
   if(options.json) genConfig.responseMimeType = 'application/json';
   const body = {
@@ -19801,14 +19804,16 @@ async function _aiCallGemini(apiKey, model, history, options){
   };
   const resp = await fetch(url, {
     method: 'POST',
-    headers: {'Content-Type': 'application/json'},
+    headers: {'Content-Type': 'application/json', 'x-goog-api-key': apiKey},
     body: JSON.stringify(body)
   });
   if(!resp.ok){
     let errMsg = 'Erreur HTTP ' + resp.status;
     try { const e = await resp.json(); if(e && e.error && e.error.message) errMsg = e.error.message; } catch(e){}
     if(resp.status === 400 && /API key not valid/i.test(errMsg)){
-      throw new Error("[Gemini] Clé API invalide. Vérifiez votre clé dans ⚙️ (commence par AIza…). Vous pouvez en générer une gratuite sur aistudio.google.com/app/apikey");
+      throw new Error("[Gemini] Clé API refusée. Vérifiez la clé dans les réglages IA : AI Studio délivre désormais des clés « AQ.… », à créer sur aistudio.google.com/api-keys");
+    } else if(resp.status === 404){
+      throw new Error("[Gemini] Modèle indisponible pour ce compte : " + errMsg + " — ouvrez les réglages IA et cliquez « Charger les modèles de mon compte ».");
     } else if(resp.status === 429){
       throw new Error("[Gemini] Quota dépassé (1 500 requêtes/jour gratuit). Réessayez plus tard ou changez de modèle.");
     } else if(resp.status === 403){
@@ -26953,7 +26958,7 @@ async function pamodelAskAI(){
   // pour ne pas tronquer 5-8 pannes détaillées.
   const aiOptions = {
     system: "Tu es un expert SAV PEM aspirateurs robots. Tu réponds UNIQUEMENT en JSON valide UTF-8, sans markdown, sans bloc de code, sans texte avant ni après. Le JSON est lu directement par un programme.",
-    maxTokens: 2048,
+    maxTokens: ovpemBudgetTokens(2048),
     json: true
   };
 
@@ -28289,6 +28294,310 @@ function ovpemMessageAfficher(m, nb){
   setTimeout(function(){ if(d.parentNode) d.remove(); }, 30000);
 }
 </script>
+<script>
+/* ═══ V3.22 — Test de la clé Google AI Studio (Gemini) ═══
+   Distingue trois cas : clé acceptée, clé refusée par Google, domaine bloqué par le réseau. */
+async function ovpemTesterCleIA(){
+  const res = document.getElementById('aiCfgTestRes');
+  const btn = document.querySelector('.ai-cfg-test');
+  const champ = document.getElementById('aiCfgKey');
+  let cle = champ ? (champ.value || '').trim() : '';
+  if(!cle){ try { cle = (aiGetKey('gemini') || '').trim(); } catch(e){} }
+  if(!cle){ res.className = 'ai-cfg-testres ko'; res.textContent = '✗ Saisissez d’abord une clé.'; return; }
+  res.className = 'ai-cfg-testres att'; res.textContent = '⏳ Test en cours…';
+  if(btn) btn.disabled = true;
+  const t0 = performance.now();
+  try{
+    /* V3.23 — en-tête x-goog-api-key : accepte aussi bien les clés « AQ. » que les anciennes « AIza » */
+    const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models', { cache:'no-store', headers:{'x-goog-api-key': cle} });
+    const ms = Math.round(performance.now() - t0);
+    if(r.ok){
+      let nb = 0;
+      try { nb = ((await r.json()).models || []).length; } catch(e){}
+      res.className = 'ai-cfg-testres ok';
+      res.textContent = '✓ Clé acceptée par Google en ' + ms + ' ms' + (nb ? ' — ' + nb + ' modèles disponibles.' : '.');
+    } else {
+      let msg = '';
+      try { msg = ((await r.json()).error || {}).message || ''; } catch(e){}
+      res.className = 'ai-cfg-testres ko';
+      res.textContent = '✗ Clé refusée (HTTP ' + r.status + ')' + (msg ? ' : ' + msg.slice(0, 120) : '') +
+        ' — vérifiez la clé dans AI Studio, ou qu’elle n’a pas été révoquée.';
+    }
+  }catch(e){
+    res.className = 'ai-cfg-testres ko';
+    res.textContent = '✗ Réseau : le domaine de Google est bloqué depuis ce poste. Le relais Copilot reste la voie disponible.';
+  }
+  if(btn) btn.disabled = false;
+}
+/* Accès direct à la configuration depuis le tableau de bord */
+function ovpemCleIAOuvrir(){
+  try { if(typeof aiOpenConfig === 'function') aiOpenConfig(); } catch(e){ console.warn('[V3.22] configuration IA', e); }
+}
+</script>
+<script>
+/* ═══════════ V3.25 — COÛT DES REQUÊTES ═══════════
+   Sur un fournisseur payant, la réponse est plafonnée : même contenu utile,
+   sans dépenses inutiles. Gemini (gratuit) garde le budget complet. */
+const OVPEM_PLAFOND_PAYANT = 0.55;   /* 55 % du budget d'origine */
+function ovpemFournisseurPayant(){
+  try {
+    if(typeof aiGetMode === 'function' && aiGetMode() === 'server') return false;
+    const p = (typeof aiGetActiveProvider === 'function') ? aiGetActiveProvider() : 'gemini';
+    return p === 'claude' || p === 'openai';
+  } catch(e){ return false; }
+}
+function ovpemBudgetTokens(defaut){
+  const d = Number(defaut) || 1024;
+  if(!ovpemFournisseurPayant()) return d;
+  return Math.max(700, Math.round(d * OVPEM_PLAFOND_PAYANT));
+}
+/* Réglages IA, depuis « Synchronisation et réglages » (déjà authentifié) */
+function ovpemReglagesIA(){
+  try {
+    if(typeof _aiOpenConfigDo === 'function') _aiOpenConfigDo();
+    else if(typeof aiOpenConfig === 'function') aiOpenConfig();
+  } catch(e){ console.warn('[V3.25] réglages IA', e); }
+}
+
+/* ═══════════ V3.25 — LA BASE OVPEM EN COMPLÉMENT DE L'IA ═══════════
+   La question part à l'IA ; en parallèle, la base interne est fouillée.
+   Ce qui est cohérent avec le symptôme est proposé en complément.
+   Si rien ne colle, la réponse de l'IA reste seule. */
+const OVPEM_BASE_MOTS_VIDES = new Set(['avec','pour','dans','cette','celui','plus','sans','mais','faire','fait','quand','comme','tout','tous','toute','leur','elle','vous','nous','être','avoir','apres','après','avant','depuis','chez','sur','les','des','une','par','pas','que','qui','quoi','est','son','sa','ses','mon','ma','mes','client','robot','appareil','probleme','problème','panne','marche','fonctionne']);
+function _obNorm(t){ return String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
+function _obMots(t){
+  const n = _obNorm(t);
+  const mots = n.split(/[^a-z0-9]+/).filter(m => m.length >= 4 && !OVPEM_BASE_MOTS_VIDES.has(m));
+  return Array.from(new Set(mots));
+}
+function _obCodes(t){
+  const out = (String(t || '').toUpperCase().match(/\b[EC]\s?-?\d{1,3}\b/g) || []).map(c => c.replace(/[\s-]/g, ''));
+  return Array.from(new Set(out));
+}
+function ovpemBaseSources(){
+  const items = [];
+  /* 1. Codes erreur de toutes les marques, tels qu'affichés dans l'outil */
+  document.querySelectorAll('.error-card').forEach(function(c){
+    const code = (c.querySelector('.err-code') || {}).textContent || '';
+    const lib = (c.querySelector('.err-label') || {}).textContent || '';
+    const attr = Array.from(c.attributes).find(a => a.name.indexOf('data-etext') === 0);
+    const liste = c.closest('[id$="ErrList"]');
+    const page = liste ? liste.id.replace('ErrList', '-errors') : '';
+    if(!lib) return;
+    items.push({ type:'Code erreur', titre:(code ? code.trim() + ' — ' : '') + lib.trim(),
+                 texte:(code + ' ' + lib + ' ' + (attr ? attr.value : '')), page:page });
+  });
+  /* 2. Symptômes du guide */
+  try{
+    if(typeof SYMPTOMS !== 'undefined'){
+      Object.keys(SYMPTOMS).forEach(function(marque){
+        (SYMPTOMS[marque] || []).forEach(function(sy){
+          items.push({ type:'Symptôme du guide', titre:sy.name || '', texte:(sy.name || '') + ' ' + (sy.keywords || ''),
+                       marque:marque, symptome:sy.id });
+        });
+      });
+    }
+  }catch(e){}
+  /* 3. Contributions du magasin */
+  try{
+    (JSON.parse(localStorage.getItem('ovaContribMagasin_v1') || '[]') || []).forEach(function(c){
+      items.push({ type:'Contribution magasin', titre:c.name || '', texte:(c.name || '') + ' ' + (c.desc || '') + ' ' + (c.keywords || ''),
+                   marque:c.brandKey, detail:(c.solution || '').slice(0, 220) });
+    });
+  }catch(e){}
+  /* 4. Cas connus du Décodeur */
+  try{
+    const cc = JSON.parse(localStorage.getItem('ovpem_decodeur_cas_connus_v1') || 'null');
+    (Array.isArray(cc) ? cc : (cc && cc.cas) || []).forEach(function(c){
+      items.push({ type:'Cas connu', titre:c.titre || c.symptome || c.verbatim || '',
+                   texte:[c.titre, c.symptome, c.verbatim, c.solution].filter(Boolean).join(' ') });
+    });
+  }catch(e){}
+  /* 5. FAQ Support iRobot */
+  try{
+    if(typeof IR_FAQ !== 'undefined' && Array.isArray(IR_FAQ)){
+      IR_FAQ.forEach(function(f){
+        items.push({ type:'FAQ iRobot', titre:f.titre_fr || '', texte:(f.titre_fr || '') + ' ' + (f.titre_en || '') + ' ' + (f.categorie || ''), lien:f.lien });
+      });
+    }
+  }catch(e){}
+  return items;
+}
+let _obAppairagePertinent = false;
+function ovpemBaseTrouver(question, max){
+  max = max || 4;
+  _obAppairagePertinent = /appli|application|appair|connect|wifi|wi-fi|jumel|bluetooth|compte|telecharg|télécharg/i.test(_obNorm(question));
+  const mots = _obMots(question), codes = _obCodes(question);
+  if(!mots.length && !codes.length) return [];
+  const resultats = [];
+  ovpemBaseSources().forEach(function(it){
+    const foin = _obNorm(it.texte || it.titre);
+    let score = 0;
+    mots.forEach(function(m){ if(foin.indexOf(m) !== -1) score += 1; });
+    codes.forEach(function(c){ if((it.texte || '').toUpperCase().replace(/[\s-]/g, '').indexOf(c) !== -1) score += 3; });
+    if(score >= 2) resultats.push({ it: it, score: score });
+  });
+  resultats.sort(function(a, b){ return b.score - a.score; });
+  const vus = new Set(), sortie = [];
+  resultats.forEach(function(r){
+    const cle = r.it.type + '|' + r.it.titre;
+    if(vus.has(cle) || !r.it.titre) return;
+    vus.add(cle); sortie.push(r.it);
+  });
+  return sortie.slice(0, max);
+}
+function _obEsc(t){ return String(t || '').replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+/* V3.27 — plus de pavé : au plus deux raccourcis, seulement s'ils sont utiles. */
+function ovpemBaseBloc(items){
+  const liens = [];
+  (items || []).forEach(function(it){
+    if(liens.length >= 2) return;
+    let act = '';
+    if(it.page) act = "showPage('" + it.page + "')";
+    else if(it.lien) act = "ovpemOuvrirLien('" + it.lien + "')";
+    else if(it.symptome && it.marque) act = "openWizardSymptom('" + it.marque + "','" + it.symptome + "')";
+    if(!act) return;
+    liens.push('<button type="button" class="ob-lien" onclick="' + act.replace(/"/g, '&quot;') + '">' +
+               _obEsc(it.titre).slice(0, 52) + '</button>');
+  });
+  /* Raccourci vers l'outil d'appairage quand il est question d'application ou de connexion */
+  if(_obAppairagePertinent && liens.length < 2){
+    liens.push('<button type="button" class="ob-lien" onclick="ovpemOuvrirEmbarque(\'appairageAppsSrc\', {compteur:\'appsRobotsOpens\'})">📱 Application et appairage robots</button>');
+  }
+  if(!liens.length) return '';
+  return '<div class="ob-bloc"><span class="ob-titre">À consulter si besoin :</span>' + liens.join('') + '</div>';
+}
+/* Injection dans le Référent Virtuel : sous la dernière réponse de l'IA */
+function ovpemBaseInjecterChat(){
+  try{
+    if(typeof aiChatHistory === 'undefined' || !aiChatHistory.length) return;
+    const msgs = document.querySelectorAll('#aiChatZone .ai-msg-bot');
+    if(!msgs.length) return;
+    const dernier = msgs[msgs.length - 1];
+    if(dernier.querySelector('.ob-bloc')) return;
+    let question = '';
+    for(let i = aiChatHistory.length - 1; i >= 0; i--){
+      if(aiChatHistory[i].role === 'user'){ question = aiChatHistory[i].text; break; }
+    }
+    const bloc = ovpemBaseBloc(ovpemBaseTrouver(question, 4));
+    if(bloc) dernier.insertAdjacentHTML('beforeend', bloc);
+  }catch(e){ console.warn('[V3.25] base + IA', e); }
+}
+(function(){
+  const orig = window.aiChatRender;
+  if(typeof orig === 'function' && !orig._base){
+    const enveloppe = function(){
+      const r = orig.apply(this, arguments);
+      setTimeout(ovpemBaseInjecterChat, 30);
+      return r;
+    };
+    enveloppe._base = true;
+    window.aiChatRender = enveloppe;
+  }
+})();
+/* Injection dans le Décodeur : à la fin de la fiche de diagnostic */
+(function(){
+  if(!document.addEventListener) return;
+  document.addEventListener('DOMContentLoaded', function(){
+    const corps = document.getElementById('ovd-fiche-body');
+    if(!corps || typeof MutationObserver === 'undefined') return;
+    let enCours = false;
+    new MutationObserver(function(){
+      if(enCours) return;
+      if(!corps.innerHTML.trim() || corps.querySelector('.ob-bloc')) return;
+      enCours = true;
+      try{
+        const v = document.getElementById('ovd-verbatim');
+        const bloc = ovpemBaseBloc(ovpemBaseTrouver(v ? v.value : '', 4));
+        if(bloc) corps.insertAdjacentHTML('beforeend', bloc);
+      }catch(e){ console.warn('[V3.25] base + IA', e); }
+      enCours = false;
+    }).observe(corps, { childList: true });
+  });
+})();
+</script>
+<script>
+/* ═══════════ V3.26 — MODÈLES GEMINI ═══════════
+   Google retire régulièrement des modèles : « This model … is no longer available to new
+   users. Please update your code to use models/X ». On récupère le modèle recommandé dans
+   le message, on l'enregistre et on relance la demande, une seule fois. */
+const OVPEM_MODELE_DEFAUT = 'gemini-3.8-flash';
+function ovpemModeleRecommande(message){
+  const m = String(message || '').match(/use\s+models\/([a-z0-9.\-]+)/i);
+  if(m) return m[1];
+  if(/no longer available|not found|NOT_FOUND/i.test(String(message || ''))) return OVPEM_MODELE_DEFAUT;
+  return null;
+}
+function ovpemModeleEnregistrer(modele){
+  try { localStorage.setItem('ovpem_gemini_model', modele); } catch(e){}
+  try { localStorage.setItem('ovd_model_gemini', modele); } catch(e){}
+  const sel = document.getElementById('aiCfgModel');
+  if(sel){
+    if(!Array.prototype.some.call(sel.options, function(o){ return o.value === modele; })){
+      const o = document.createElement('option');
+      o.value = modele; o.textContent = modele + ' (recommandé par Google)';
+      sel.insertBefore(o, sel.firstChild);
+    }
+    sel.value = modele;
+  }
+}
+/* Liste réelle des modèles accessibles avec la clé du poste */
+async function ovpemChargerModeles(){
+  const res = document.getElementById('aiCfgModelesRes');
+  const sel = document.getElementById('aiCfgModel');
+  const champ = document.getElementById('aiCfgKey');
+  let cle = champ ? (champ.value || '').trim() : '';
+  if(!cle){ try { cle = (aiGetKey('gemini') || '').trim(); } catch(e){} }
+  if(!cle){ res.className = 'ai-cfg-testres ko'; res.textContent = '✗ Enregistrez d’abord une clé.'; return; }
+  res.className = 'ai-cfg-testres att'; res.textContent = '⏳ Lecture des modèles…';
+  try{
+    const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models', { cache:'no-store', headers:{'x-goog-api-key': cle} });
+    if(!r.ok){ res.className = 'ai-cfg-testres ko'; res.textContent = '✗ Lecture impossible (HTTP ' + r.status + ').'; return; }
+    const data = await r.json();
+    const dispo = (data.models || [])
+      .filter(function(m){ return (m.supportedGenerationMethods || []).indexOf('generateContent') !== -1; })
+      .map(function(m){ return String(m.name || '').replace(/^models\//, ''); })
+      .filter(function(n){ return /^gemini-/.test(n) && !/embedding|tts|audio|image|live|robotics/i.test(n); })
+      .sort().reverse();
+    if(!dispo.length){ res.className = 'ai-cfg-testres ko'; res.textContent = '✗ Aucun modèle de génération accessible avec cette clé.'; return; }
+    const actuel = sel ? sel.value : '';
+    if(sel){
+      sel.innerHTML = dispo.map(function(n){ return '<option value="' + n + '">' + n + '</option>'; }).join('');
+      sel.value = dispo.indexOf(actuel) !== -1 ? actuel : (dispo.indexOf(OVPEM_MODELE_DEFAUT) !== -1 ? OVPEM_MODELE_DEFAUT : dispo[0]);
+      try { aiSaveModelOnly('gemini'); } catch(e){}
+    }
+    res.className = 'ai-cfg-testres ok';
+    res.textContent = '✓ ' + dispo.length + ' modèle(s) disponibles — « ' + (sel ? sel.value : dispo[0]) + ' » sélectionné.';
+  }catch(e){
+    res.className = 'ai-cfg-testres ko';
+    res.textContent = '✗ Réseau : domaine Google bloqué depuis ce poste.';
+  }
+}
+/* Repli automatique : une erreur de modèle relance la requête avec le modèle recommandé */
+(function(){
+  if(window.fetch && window.fetch._modeleGemini) return;
+  const orig = window.fetch;
+  const enveloppe = async function(entree, options){
+    const url = (typeof entree === 'string') ? entree : (entree && entree.url) || '';
+    const r = await orig.apply(this, arguments);
+    if(!/generativelanguage\.googleapis\.com.*generateContent/.test(url) || r.status !== 404) return r;
+    let corps = '';
+    try { corps = await r.clone().text(); } catch(e){ return r; }
+    const modele = ovpemModeleRecommande(corps);
+    const actuel = (url.match(/models\/([^:]+):generateContent/) || [])[1];
+    if(!modele || !actuel || modele === actuel) return r;
+    console.warn('[V3.26] modèle ' + actuel + ' retiré par Google → bascule sur ' + modele);
+    ovpemModeleEnregistrer(modele);
+    try {
+      const r2 = await orig.call(this, url.replace('models/' + actuel + ':generateContent', 'models/' + modele + ':generateContent'), options);
+      if(r2.ok && typeof ovpemToast === 'function') ovpemToast('Modèle IA mis à jour : ' + modele);
+      return r2;
+    } catch(e){ return r; }
+  };
+  enveloppe._modeleGemini = true;
+  window.fetch = enveloppe;
+})();
+</script>
 <!-- ═══════════ V3.20 — SYNCHRONISATION AU LANCEMENT ET SUPERVISEUR ═══════════ -->
 <div id="ovpemBarreHaut" class="obh">
   <div id="ovpemInviteSync" class="obh-carte" hidden>
@@ -28499,6 +28808,23 @@ body.acc-hors-accueil #accueilRetour{display:inline-flex;align-items:center;gap:
 .mq-liens{display:flex;flex-wrap:wrap;gap:6px}
 .mq-vide{font-size:12px;color:var(--text2)}
 .mq-chiffres{font-size:12.5px;font-weight:600;color:var(--text)}
+.ai-cfg-test{padding:7px 14px;border-radius:9px;border:1px solid var(--accent);background:var(--accent-glow);color:var(--accent2);font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer}
+.ai-cfg-test:hover{background:var(--accent);color:#fff}
+.ai-cfg-test:disabled{opacity:.6;cursor:progress}
+.ai-cfg-testres{font-size:12.5px;font-weight:600;color:var(--text2)}
+.ai-cfg-testres.ok{color:var(--green)}
+.ai-cfg-testres.ko{color:var(--red)}
+.ai-cfg-testres.att{color:var(--orange)}
+.ovd-rappel-orientation{margin:8px 0 10px;padding:10px 12px;border-radius:10px;background:var(--amber-bg,rgba(245,158,11,.12));border:1px solid rgba(245,158,11,.45);font-size:12.5px;line-height:1.55;color:var(--text)}
+.ovd-ro{display:inline-block;padding:1px 8px;border-radius:999px;font-size:11.5px;font-weight:700;white-space:nowrap}
+.ovd-ro.ok{background:var(--green-bg);color:var(--green)}
+.ovd-ro.mag{background:var(--orange-bg);color:var(--orange)}
+.ovd-ro.atel{background:var(--red-bg);color:var(--red)}
+.ob-bloc{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;padding-top:9px;border-top:1px dashed var(--border)}
+.ob-titre{font-size:11.5px;font-weight:700;color:var(--text2)}
+.ob-lien{padding:5px 11px;border-radius:999px;border:1px solid var(--border2);background:transparent;color:var(--text);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer}
+.ob-lien:hover{border-color:var(--accent);color:var(--accent2)}
+.light .ob-lien:hover{color:#1d4ed8}
 .acc-marques[hidden]{display:none}
 .acc-marques{margin-top:10px;padding:12px 14px;border:1px solid var(--border);border-radius:11px;background:var(--bg3);display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
 .acc-marque{padding:9px 11px;border-radius:9px;background:var(--surface);border:1px solid var(--border)}
@@ -28549,13 +28875,15 @@ body.acc-hors-accueil #accueilRetour{display:inline-flex;align-items:center;gap:
     { theme: 'diagnostiquer', id: 'referent', ico: '🤖', titre: 'Référent Virtuel',
       desc: 'Diagnostic assisté par l’IA, calibré sur votre rôle.', profils: ['expert'] },
     { theme: 'diagnostiquer', id: 'triage', ico: '⚡', titre: 'Triage Rapide',
-      desc: 'Panorama des défauts d’une marque, classés par gravité.', profils: ['novice', 'expert'] },
+      desc: 'Panorama des défauts d’une marque, classés par gravité.', profils: ['expert'] },
     { theme: 'diagnostiquer', id: 'photo', ico: '📷', titre: 'Analyse Photo',
       desc: 'Avis technique sur une pièce à partir d’une photo.', profils: ['novice', 'expert'] },
     { theme: 'diagnostiquer', id: 'appsRobots', ico: '📱', titre: 'Application et appairage robots',
       desc: 'Connecter le robot à l’application du constructeur : QR code et étapes, marque par marque.', profils: ['novice', 'expert'] },
+    { theme: 'diagnostiquer', id: 'cleIA', ico: '🔑', titre: 'Clé IA (Google AI Studio)',
+      desc: 'Enregistrer une clé Gemini pour des réponses immédiates, sans passer par Copilot.', profils: ['expert'] },
     { theme: 'diagnostiquer', id: 'askmia', ico: '🧠', titre: 'IA Roborock (AskMIA)',
-      desc: 'Assistant technique du constructeur. Identifiants de service rappelés à l’ouverture.', profils: ['novice', 'expert'] },
+      desc: 'Assistant technique du constructeur. Identifiants de service rappelés à l’ouverture.', profils: ['expert'] },
     /* ── Trouver une information ── */
     { theme: 'informer', id: 'marques', ico: '🏷️', titre: 'Codes erreur par marque',
       desc: 'Roborock, Dreame, Ecovacs, iRobot, Dyson : codes, pannes et diagnostics.', profils: ['novice', 'expert'] },
@@ -28576,12 +28904,12 @@ body.acc-hors-accueil #accueilRetour{display:inline-flex;align-items:center;gap:
     { theme: 'informer', id: 'bit', ico: '🧪', titre: 'Mode BIT et tests',
       desc: 'Autotests Roborock et vérification des stations.', profils: ['expert'] },
     { theme: 'informer', id: 'hitparade', ico: '🏆', titre: 'Hit Parade des pièces',
-      desc: 'Pièces détachées par CODIC, sources ELA et IAD. Outil embarqué.', profils: ['novice', 'expert'] },
+      desc: 'Pièces détachées par CODIC, sources ELA et IAD. Outil embarqué.', profils: ['expert'] },
     { theme: 'informer', id: 'hub', ico: '🗂️', titre: 'HUB Drive constructeurs',
-      desc: 'Documentation constructeurs centralisée. Identifiants rappelés à l’ouverture.', profils: ['novice', 'expert'] },
+      desc: 'Documentation constructeurs centralisée. Identifiants rappelés à l’ouverture.', profils: ['expert'] },
     /* ── Suivre et partager ── */
     { theme: 'suivre', id: 'pstats', ico: '📈', titre: 'Stats Pannes',
-      desc: 'Taux de résolution par marque, modèle et symptôme.', profils: ['novice', 'expert'] },
+      desc: 'Taux de résolution par marque, modèle et symptôme.', profils: ['expert'] },
     { theme: 'suivre', id: 'stats', ico: '📊', titre: 'Statistiques d’utilisation',
       desc: 'Activité de l’outil, et de tous les postes partagés.', profils: ['novice', 'expert'] },
     { theme: 'suivre', id: 'fiches', ico: '🖨️', titre: 'Fiches Flash TRI 20',
@@ -28593,7 +28921,7 @@ body.acc-hors-accueil #accueilRetour{display:inline-flex;align-items:center;gap:
     { theme: 'suivre', id: 'contact', ico: '✉️', titre: 'Contacter le référent',
       desc: 'Symptôme absent ou solution insuffisante : demandez de l’aide.', profils: ['novice', 'expert'] },
     { theme: 'suivre', id: 'contribMag', ico: '💎', titre: 'Contribution Magasin',
-      desc: 'Ajouter un symptôme et sa solution au guide.', profils: ['novice', 'expert'] },
+      desc: 'Ajouter un symptôme et sa solution au guide.', profils: ['expert'] },
     { theme: 'suivre', id: 'contribAtel', ico: '💎', titre: 'Contribution Atelier',
       desc: 'Ajouter une ressource technique ou un document.', profils: ['expert'] },
     { theme: 'suivre', id: 'admin', ico: '🔧', titre: 'Synchronisation et réglages',
@@ -28619,6 +28947,7 @@ body.acc-hors-accueil #accueilRetour{display:inline-flex;align-items:center;gap:
     marques: function () { api.marques(); },
     askmia: function () { api.askmia(); },
     hub: function () { api.hub(); },
+    cleIA: function () { try { root.ovpemCleIAOuvrir(); } catch (e) { console.warn('[V3.22] clé IA', e); } },
     appsRobots: function () {
       try { root.ovpemOuvrirEmbarque('appairageAppsSrc', { compteur: 'appsRobotsOpens' }); } catch (e) { console.warn('[V3.18] applications', e); }
     },
@@ -30243,14 +30572,7 @@ body.acc-hors-accueil #accueilRetour{display:inline-flex;align-items:center;gap:
     if (M && M.zendesk && zSujet) pousser(rech, G('Recherche « ' + zSujet + ' » dans le centre d\'aide ' + M.nom, M.zendesk + encodeURIComponent(zSujet)), 'recherche');
     groupes.push({ titre: 'Trouver la page exacte', liens: rech });
 
-    // 4. En images
-    var vis = [];
-    var qVis = (nomAff || String(texte || '').slice(0, 80)) + ' ' + (qSujet || 'tutoriel application');
-    pousser(vis, G('Tutoriel vidéo (étapes filmées)', ytUrl(qVis)), 'video');
-    pousser(vis, G("Captures d'écran de l'application", gImgUrl(((M && M.app ? M.app + ' ' : '') + qVis))), 'images');
-    if (M && M.videos) pousser(vis, M.videos, 'video');
-    if (M && M.youtube) pousser(vis, G('Chaîne vidéo officielle ' + M.nom, M.youtube), 'video');
-    groupes.push({ titre: 'Étapes en images', liens: vis });
+    // 4. En images — retiré en V3.27 : peu utilisé et trop de liens dans la fiche
 
     // 5. Application
     if (M && M.appli) groupes.push({ titre: 'Application ' + M.app, liens: [{ t: M.appli.t, u: M.appli.u, brut: M.appli.u, type: 'officiel' }] });
@@ -30483,7 +30805,6 @@ body.acc-hors-accueil #accueilRetour{display:inline-flex;align-items:center;gap:
       </div>
       <div class="ovd-app-actions">
         <button class="ovd-btn" onclick="OVD.toggleHistory()">📜 Historique</button>
-        <button class="ovd-btn" onclick="OVD.openConfig()">⚙️ IA</button>
         <button class="ovd-modal-close" onclick="OVD.close()" title="Fermer">✕</button>
       </div>
     </div>
@@ -30558,7 +30879,7 @@ body.acc-hors-accueil #accueilRetour{display:inline-flex;align-items:center;gap:
       <div id="ovd-loading" class="ovd-panel">
         <div class="ovd-spinner"></div>
         <div class="ovd-loading-msg" id="ovd-loading-msg">Normalisation du verbatim…</div>
-        <div class="ovd-loading-sub">Le moteur éclate le verbatim en sous-symptômes, vérifie les cas connus, puis interroge l'IA pour les zones non couvertes.</div>
+        <div class="ovd-loading-sub">Le moteur analyse le verbatim, le décompose en sous-symptômes, exploite les cas déjà référencés dans OVPEM, puis complète l'investigation grâce à l'IA en s'appuyant sur les ressources et bases de connaissances constructeurs.</div>
       </div>
 
       <!-- ZONE 2 : RESULT -->
@@ -30618,7 +30939,7 @@ body.acc-hors-accueil #accueilRetour{display:inline-flex;align-items:center;gap:
       </div>
       <div class="ovd-field">
         <label class="ovd-field-label">Clé API <span id="ovd-cfg-key-prov">Gemini</span></label>
-        <input type="password" id="ovd-cfg-key" class="ovd-input" placeholder="AIza... / sk-ant-... / sk-..." />
+        <input type="password" id="ovd-cfg-key" class="ovd-input" placeholder="AQ.Ab… / AIza… / sk-ant-… / sk-…" />
         <div class="ovd-field-help">
           <span id="ovd-help-gemini">Clé Gemini gratuite : <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a></span>
           <span id="ovd-help-openai" style="display:none">Clé OpenAI (payant) : <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com</a></span>
@@ -30731,11 +31052,11 @@ const LS = {
 const ADMIN_PWD = 'bezons2026';
 const AUTH_TTL = 30*60*1000;
 const MODELS = {
-  gemini:['gemini-2.0-flash','gemini-2.0-flash-exp','gemini-1.5-flash','gemini-1.5-pro'],
+  gemini:['gemini-3.8-flash','gemini-3.7-flash','gemini-3.6-flash','gemini-3.5-flash','gemini-3.5-flash-lite'],
   claude:['claude-sonnet-4-5','claude-opus-4-5','claude-haiku-4-5'],
   openai:['gpt-4o-mini','gpt-4o','gpt-4-turbo']
 };
-const DEFAULT_MODEL = {gemini:'gemini-2.0-flash',claude:'claude-sonnet-4-5',openai:'gpt-4o-mini'};
+const DEFAULT_MODEL = {gemini:'gemini-3.8-flash',claude:'claude-sonnet-4-5',openai:'gpt-4o-mini'};
 
 let mode = 'atelier';
 /* ════ V3.02 — Audiences du Décodeur : Atelier, Magasin, Hotline, RCD ════
@@ -31172,13 +31493,13 @@ async function callAI(prompt, options){
 }
 
 async function _gemini(key, model, system, user, maxTokens, temperature){
-  const url = 'https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent?key='+encodeURIComponent(key);
+  const url = 'https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent'; /* V3.23 — clé en en-tête */
   const body = {
     systemInstruction:{parts:[{text:system}]},
     contents:[{role:'user',parts:[{text:user}]}],
     generationConfig:{temperature:temperature,maxOutputTokens:maxTokens,responseMimeType:'application/json'}
   };
-  const res = await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const res = await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify(body)});
   if(!res.ok){const e=await res.text();throw new Error('Gemini '+res.status+': '+e.slice(0,200))}
   const data = await res.json();
   const t = data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0] ? data.candidates[0].content.parts[0].text : '';
@@ -31227,7 +31548,7 @@ function tryParseJSON(text){
 async function repairJSON(broken){
   const sys = 'Tu reçois un JSON invalide. Tu réponds UNIQUEMENT avec le JSON corrigé, sans backticks, sans texte avant ou après. Conserve TOUT le contenu, corrige seulement la syntaxe.';
   try{
-    const t = await callAI(broken, {system:sys, maxTokens:4096, temperature:0});
+    const t = await callAI(broken, {system:sys, maxTokens:ovpemBudgetTokens(4096), temperature:0});
     return tryParseJSON(t);
   }catch(e){return null}
 }
@@ -31397,6 +31718,10 @@ function render(f){
   if(f.verdict_global){
     h.push('<div class="ovd-fiche-section">');
     h.push('<div class="ovd-section-label">Verdict orienté</div>');
+    /* V3.27 — rappel : l'orientation doit être renseignée en fin de diagnostic */
+    h.push('<div class="ovd-rappel-orientation">📌 <b>Pensez à clôturer le diagnostic</b> en bas de la fiche : ' +
+           '<span class="ovd-ro ok">✓ Résolu</span>, <span class="ovd-ro mag">🏪 Passage magasin</span> ou ' +
+           '<span class="ovd-ro atel">→ Passage atelier</span>. C\'est ce qui alimente les statistiques de l\'équipe.</div>');
     if(f.verdict_global.alerte_indice_fort){
       h.push('<div class="ovd-alerte"><strong>⚡ Indice fort :</strong> '+esc(f.verdict_global.alerte_indice_fort)+'</div>');
     }
@@ -32592,7 +32917,7 @@ async function _photoVisionCall(provider, model, apiKey, b64, mime, systemPrompt
     const body = {
       systemInstruction:{ parts:[{ text: systemPrompt }] },
       contents:[{ role:'user', parts:[ {text:userPrompt}, {inline_data:{ mime_type:mime, data:b64 }} ] }],
-      generationConfig:{ temperature:0.3, maxOutputTokens:1500, topP:0.9, responseMimeType:'application/json' },
+      generationConfig:{ temperature:0.3, maxOutputTokens:ovpemBudgetTokens(1500), topP:0.9, responseMimeType:'application/json' },
       safetySettings:[
         {category:'HARM_CATEGORY_HARASSMENT', threshold:'BLOCK_ONLY_HIGH'},
         {category:'HARM_CATEGORY_HATE_SPEECH', threshold:'BLOCK_ONLY_HIGH'},
@@ -32601,8 +32926,8 @@ async function _photoVisionCall(provider, model, apiKey, b64, mime, systemPrompt
       ]
     };
     if(mode === 'server') return _paProxyCall('gemini', model, body);
-    const url = 'https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(model)+':generateContent?key='+encodeURIComponent(apiKey);
-    const resp = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
+    const url = 'https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(model)+':generateContent'; /* V3.23 — clé en en-tête */
+    const resp = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json', 'x-goog-api-key': apiKey}, body:JSON.stringify(body)});
     if(!resp.ok){
       let m='Erreur HTTP '+resp.status; try{const e=await resp.json(); if(e&&e.error&&e.error.message)m=e.error.message;}catch(e){}
       if(resp.status===400 && /API key not valid/i.test(m)) throw new Error('[Gemini] Clé API invalide. Vérifiez ⚙️.');
