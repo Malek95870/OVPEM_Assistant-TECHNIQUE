@@ -104,6 +104,9 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
   width:220px;min-width:220px;background:var(--bg2);border-right:1px solid var(--border);
   display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;
   z-index:100;flex-shrink:0;
+  /* V3.45.1 — la place de la barre est réservée en permanence : son
+     apparition ne peut plus décaler la colonne d’un pixel. */
+  scrollbar-gutter:stable;
 }
 .sidebar-logo{padding:16px 14px 12px;border-bottom:1px solid var(--border);}
 .sidebar-logo h1{font-size:13px;font-weight:700;color:var(--text);letter-spacing:.03em;line-height:1.3;}
@@ -31767,6 +31770,34 @@ body.acc-hors-accueil #accueilRetour{display:inline-flex;align-items:center;gap:
   .ovrb-corps,.ovrb-bras-d,.ovrb-oeil,.ovmc-hublot{animation:none}
 }
 
+/* V3.45.1 — tout ce qui bouge en permanence vit dans sa propre couche.
+   Sans cela, le navigateur repeint à chaque image le bloc qui contient
+   l'animation — et quand ce bloc est la colonne de gauche, collante et
+   défilante, c'est toute la colonne qui tremble sur un poste sans carte
+   graphique. « contain » ferme la porte dans l'autre sens : la mise en page
+   et le dessin du robot ne peuvent plus déborder sur ce qui l'entoure. */
+.ovrb-coin .ovrb,
+.ovn-accueil-trio .ovrb,
+.ovn-accueil-trio .ovas,
+.ovn-accueil-trio .ovmc,
+.ovd-pense .ovrb,
+.acc-vide-robot .ovrb{will-change:transform}
+/* L'isolation porte sur les conteneurs, jamais sur les dessins eux-mêmes :
+   le robot peint deux pixels au-dessus de sa boîte au sommet du flottement,
+   et « contain » sur le dessin lui couperait le bout de l'antenne. Les
+   conteneurs, eux, ont la marge qu'il faut. */
+.ovrb-coin{contain:layout paint}
+/* Au repos, bras le long du corps : l'animation est en pause à son premier
+   instant, elle ne consomme rien et ne repeint rien. La classe « éveillé »
+   la relance, pour l'accueil puis à la demande. */
+.ovrb-coin .ovrb-corps,
+.ovrb-coin .ovrb-bras-d,
+.ovrb-coin .ovrb-oeil{animation-play-state:paused}
+.ovrb-coin.ovrb-eveille .ovrb-corps,
+.ovrb-coin.ovrb-eveille .ovrb-bras-d,
+.ovrb-coin.ovrb-eveille .ovrb-oeil{animation-play-state:running}
+.ovn-accueil-trio,.ovd-pense{contain:layout paint;padding-top:3px}
+
 /* Sous « Déconnecter » — et c'est un bouton : on peut lui demander de l'aide. */
 .ovrb-coin{display:flex;flex-direction:column;align-items:center;gap:4px;margin:12px 10px 4px;
   padding:10px 8px 8px;border-radius:12px;background:var(--bg2,rgba(255,255,255,.04));
@@ -31849,7 +31880,9 @@ body.acc-hors-accueil #accueilRetour{display:inline-flex;align-items:center;gap:
 @keyframes ovasTourne{to{transform:rotate(360deg)}}
 @keyframes ovasLidar{to{transform:rotate(360deg)}}
 @keyframes ovasBrosse{to{transform:rotate(360deg)}}
-@media(prefers-reduced-motion:reduce){.ovas-corps,.ovas-lidar,.ovas-brosse{animation:none}}
+@media(prefers-reduced-motion:reduce){
+  .ovas-corps,.ovas-lidar,.ovas-brosse,.ovmc-hublot{animation:none}
+}
 
 .ovn-accueil{margin:0 0 14px;padding:12px 14px;border-left:4px solid #f59e0b;border-radius:8px;background:rgba(245,158,11,.10);color:var(--text,#dde3f0)}.ovn-accueil-novice{display:none}body.profile-novice .ovn-accueil-novice{display:block}.ovn-accueil-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}.ovn-accueil-lbl{font:700 12.5px/1.3 "DM Sans",system-ui,sans-serif;color:#fbbf24}.ovn-accueil-txt{margin:0;font:500 14.5px/1.55 "DM Sans",system-ui,sans-serif;max-width:80ch}.ovn-accueil-dest{margin:8px 0 0;padding-top:7px;border-top:1px dashed rgba(245,158,11,.4);font:500 12px/1.5 "DM Sans",system-ui,sans-serif;color:var(--text2,#8b99b8);max-width:80ch}.ovn-accueil-dest b{color:#fbbf24}.ovn-panel{margin:12px 0 4px;border:1px solid var(--border,#253047);border-radius:10px;background:var(--surface2,#1e2940);color:var(--text,#dde3f0)}.ovn-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;padding:10px 14px;cursor:pointer;list-style:none}.ovn-head::-webkit-details-marker{display:none}.ovn-head::before{content:"\25B8";color:#fbbf24;font-size:11px;transition:transform .15s}.ovn-panel[open]>.ovn-head::before{transform:rotate(90deg)}.ovn-title{font:700 14px/1.3 "DM Sans",system-ui,sans-serif;color:#fbbf24}.ovn-ctx{font:500 12px/1.3 "DM Sans",system-ui,sans-serif;color:var(--text2,#8b99b8)}.ovn-grp{margin:0 14px 8px}.ovn-grp-t{font:700 11.5px/1.3 "DM Sans",system-ui,sans-serif;color:var(--text2,#8b99b8);margin:6px 0 3px}.ovn-list{list-style:none;margin:0;padding:0}.ovn-li{display:flex;align-items:center;gap:8px;padding:3px 0}.ovn-li::before{content:"";flex:none;width:7px;height:7px;border-radius:50%;background:#6b7a99}.ovn-officiel::before{background:#34d399}.ovn-notice::before{background:#60a5fa}.ovn-video::before{background:#f87171}.ovn-images::before{background:#fbbf24}.ovn-a{flex:1;min-width:0;color:#fcd34d;font:500 13px/1.4 "DM Sans",system-ui,sans-serif;text-decoration:none;overflow-wrap:anywhere}.ovn-a:hover{text-decoration:underline}.ovn-a:focus-visible,.ovn-copy:focus-visible,.ovn-head:focus-visible{outline:2px solid #f59e0b;outline-offset:2px;border-radius:3px}.ovn-copy{flex:none;padding:2px 9px;border:1px solid var(--border2,#2e3a54);border-radius:6px;background:transparent;color:var(--text,#dde3f0);font:600 11px/1.6 "DM Sans",system-ui,sans-serif;cursor:pointer}.ovn-copy:hover{border-color:#f59e0b}.ovn-note{margin:4px 14px 10px;font:400 11px/1.4 "DM Sans",system-ui,sans-serif;color:var(--text2,#8b99b8)}.ovn-proc{margin:0 0 10px;padding:10px 12px;border-radius:8px;border:1px solid rgba(96,165,250,.35);background:rgba(59,130,246,.08)}.ovn-proc-t{font:700 13px/1.3 "DM Sans",system-ui,sans-serif;color:var(--text,#dde3f0);margin-bottom:6px}.ovn-proc-list{margin:0 0 0 20px;padding:0;font-size:13px;line-height:1.55;color:var(--text,#dde3f0)}.ovn-proc-list li{margin:2px 0}.ovn-proc-illu{margin-top:6px;font-size:12px;color:var(--text2,#8b99b8)}.ovn-proc-lbl{color:#93c5fd}.light .ovn-accueil{background:#fff4de;color:#1a2236}.light .ovn-accueil-lbl,.light .ovn-title{color:#8a4b00}.light .ovn-head::before{color:#8a4b00}.light .ovn-panel{background:#ffffff;color:#1a2236}.light .ovn-ctx,.light .ovn-grp-t,.light .ovn-note,.light .ovn-proc-illu{color:#4a5978}.light .ovn-a{color:#8a4b00}.light .ovn-copy{color:#1a2236}.light .ovn-proc{background:#eef4ff}.light .ovn-proc-t,.light .ovn-proc-list{color:#1a2236}.light .ovn-proc-lbl{color:#1d4ed8}@media print{.ovn-accueil,.ovn-copy{display:none!important}.ovn-panel{border-color:#999}.ovn-a{color:#000}}
 .profile-chip .pc-main{white-space:nowrap;}
@@ -35532,7 +35565,20 @@ function ovpemRobotCoin(){
       sortie.parentNode.insertBefore(box, sortie.nextSibling);
       sortie.parentNode.insertBefore(pan, box.nextSibling);
     }
-    box.addEventListener('click', function(){ ovpemRobotAideBasculer(); });
+    /* V3.45.1 — il salue à l'arrivée, puis se tait. Un seul minuteur, qu'on
+       repousse à chaque sollicitation : pas d'empilement de délais. */
+    var minuteur = null;
+    function reveiller(duree){
+      box.classList.add('ovrb-eveille');
+      if(minuteur) clearTimeout(minuteur);
+      minuteur = setTimeout(function(){ box.classList.remove('ovrb-eveille'); minuteur = null; }, duree);
+    }
+    box.ovpemReveiller = reveiller;
+    reveiller(12000);
+    box.addEventListener('pointerenter', function(){ reveiller(6000); });
+    box.addEventListener('focus', function(){ reveiller(6000); });
+
+    box.addEventListener('click', function(){ reveiller(6000); ovpemRobotAideBasculer(); });
     pan.addEventListener('click', function(ev){
       var f = ev.target.closest ? ev.target.closest('[data-ovrb-fermer]') : null;
       if(f){ ovpemRobotAideBasculer(false); if(box.focus) box.focus(); return; }
