@@ -25,7 +25,7 @@
 })();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>OVPEM V3.43 – Guide Diagnostic SAV/Magasins</title>
+<title>OVPEM V3.44 – Guide Diagnostic SAV/Magasins</title>
 <style>
 /* ═══════════════════════════════════════════════════════════
    VARIABLES & BASE
@@ -4544,7 +4544,7 @@ body:not(.ovpem-ouvert){overflow:hidden}
       <div class="gate-chip"><div class="gc-ico">🏪</div><div class="gc-t">Magasin / Hotline / RCD</div><div class="gc-s">Guidage rapide IA</div></div>
       <div class="gate-chip"><div class="gc-ico">🔧</div><div class="gc-t">Atelier / Technicien</div><div class="gc-s">Accès complet</div></div>
     </div>
-    <div class="gate-foot">Outil Vérification PEM<br>🔒 Programme protégé · <span id="gateVersion">v3.43</span><span class="gate-mention">Usage interne, diffusion interdite</span></div>
+    <div class="gate-foot">Outil Vérification PEM<br>🔒 Programme protégé · <span id="gateVersion">v3.44</span><span class="gate-mention">Usage interne, diffusion interdite</span></div>
   </div>
 </div>
 
@@ -4622,7 +4622,7 @@ body:not(.ovpem-ouvert){overflow:hidden}
     </button>
     <button type="button" id="ovpemSupBtn" class="sb-sup expert-only" onclick="ovpemSupOuvrir()" title="Superviseur — postes connectés et messages">👁️ Superviseur</button>
     <div style="text-align:center;margin-top:8px;">
-      <span class="ovpem-version-badge" id="ovpemVersionBadge" title="Version d'OVPEM en cours d'utilisation. Cliquer pour vérifier les mises à jour.">v3.43</span>
+      <span class="ovpem-version-badge" id="ovpemVersionBadge" title="Version d'OVPEM en cours d'utilisation. Cliquer pour vérifier les mises à jour.">v3.44</span>
     </div>
   </div>
   <div class="sidebar-footer">SAV/Magasins – Usage interne</div>
@@ -12423,7 +12423,7 @@ ovpemMigratePasswordsToHash();
    - Configuration de l'URL dans le panneau admin
    - Cache busting pour forcer le refresh
    ═══════════════════════════════════════════════════════════ */
-const OVPEM_VERSION = "3.43";
+const OVPEM_VERSION = "3.44";
 /* V3.30 — logo du Décodeur Verbatim : une bulle (les mots du client) traversée
    d'une étincelle (l'analyse IA appuyée sur la base OVPEM). Remplace la pièce de puzzle. */
 const OVPEM_LOGO_DECODEUR = "<svg class=\"ovd-logo\" viewBox=\"0 0 24 24\" aria-hidden=\"true\" focusable=\"false\"><path class=\"ovd-logo-bulle\" d=\"M4.6 3h14.8A2.6 2.6 0 0 1 22 5.6v8.6a2.6 2.6 0 0 1-2.6 2.6h-8.1l-4.4 3.6a.85.85 0 0 1-1.39-.66V16.8H4.6A2.6 2.6 0 0 1 2 14.2V5.6A2.6 2.6 0 0 1 4.6 3Z\"/><path class=\"ovd-logo-ia\" d=\"M11.3 5.9 12.4 8.6l2.7 1.1-2.7 1.1-1.1 2.7-1.1-2.7-2.7-1.1 2.7-1.1 1.1-2.7Z\"/><circle class=\"ovd-logo-ia ovd-logo-p1\" cx=\"17.1\" cy=\"7.2\" r=\"1.05\"/><circle class=\"ovd-logo-ia ovd-logo-p2\" cx=\"16.2\" cy=\"12.6\" r=\".78\"/></svg>";
@@ -17799,7 +17799,7 @@ window.addEventListener('DOMContentLoaded', () => {
         <div class="ast-dash-info">
           <div class="ast-dash-section-title">Informations système</div>
           <table class="ast-dash-info-table">
-            <tr><td>Version</td><td><b id="astDashVersionCell">OVPEM V3.43</b></td></tr>
+            <tr><td>Version</td><td><b id="astDashVersionCell">OVPEM V3.44</b></td></tr>
             <tr><td>Stockage local utilisé</td><td id="astDashStorageSize">— Ko</td></tr>
             <tr><td>Marques masquées</td><td id="astDashBrandsHidden">0</td></tr>
             <tr><td>Mots de passe par défaut</td><td id="astDashPwdStatus">—</td></tr>
@@ -19854,7 +19854,7 @@ function ovpemSchemaOpen(key){
   });
   lg += '</div>';
   bd.innerHTML = desc + s.svg + lg +
-    '<div class="schv-foot"><span>OVPEM v' + (typeof OVPEM_VERSION !== 'undefined' ? OVPEM_VERSION : '3.43') +
+    '<div class="schv-foot"><span>OVPEM v' + (typeof OVPEM_VERSION !== 'undefined' ? OVPEM_VERSION : '3.44') +
     ' · Schéma générique — se référer à l\u2019éclaté du modèle avant commande.</span>' +
     '<button class="schv-print" onclick="ovpemSchemaPrint()">🖨 Imprimer</button></div>';
   ov.classList.add('show');
@@ -31634,6 +31634,55 @@ body.acc-hors-accueil #accueilRetour{display:inline-flex;align-items:center;gap:
 
 <!-- ═══════════ V3.01 — LIENS DIRECTS NOTICE & APPLICATION + PHRASE D'ACCUEIL (profil RCD) ═══════════ -->
 <style id="ovn-css">
+/* ═══ V3.44 — le robot qui salue ═══
+   Dessiné en SVG, en pièces séparées : le bras droit tourne autour de son
+   épaule pendant que le corps flotte. Un JPEG n'aurait pas pu. */
+.ovrb{display:block;overflow:visible}
+.ovrb-corps{animation:ovrbFlotte 3.4s ease-in-out infinite}
+.ovrb-bras-d{transform-origin:84px 86px;animation:ovrbSalut 3.4s ease-in-out infinite}
+.ovrb-oeil{animation:ovrbClin 6.2s ease-in-out infinite}
+@keyframes ovrbFlotte{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-4px)}
+}
+@keyframes ovrbSalut{
+  0%,58%,100%{transform:rotate(0deg)}
+  66%{transform:rotate(-52deg)}
+  74%{transform:rotate(-24deg)}
+  82%{transform:rotate(-52deg)}
+  90%{transform:rotate(-18deg)}
+}
+@keyframes ovrbClin{
+  0%,92%,100%{transform:scaleY(1)}
+  95%{transform:scaleY(.12)}
+}
+.ovrb-oeil{transform-origin:center;transform-box:fill-box}
+/* La machine : un léger balancement de tambour, rien de plus. */
+.ovmc-hublot{transform-origin:40px 56px;transform-box:view-box;animation:ovmcTourne 5.5s linear infinite}
+@keyframes ovmcTourne{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){
+  .ovrb-corps,.ovrb-bras-d,.ovrb-oeil,.ovmc-hublot{animation:none}
+}
+
+/* Sous « Déconnecter » */
+.ovrb-coin{display:flex;flex-direction:column;align-items:center;gap:4px;margin:12px 10px 4px;
+  padding:10px 8px 8px;border-radius:12px;background:var(--bg2,rgba(255,255,255,.04));
+  border:1px solid var(--border,rgba(255,255,255,.08))}
+.ovrb-coin .ovrb{width:72px;height:72px}
+.ovrb-coin-txt{font-size:10.5px;line-height:1.35;text-align:center;color:var(--text3,var(--text2));
+  letter-spacing:.01em}
+
+/* À côté de la phrase d'accueil */
+.ovn-accueil-duo{display:flex;align-items:flex-end;justify-content:center;gap:4px;flex:none}
+.ovn-accueil-duo .ovrb{width:78px;height:78px}
+.ovn-accueil-duo .ovmc{width:52px;height:60px}
+.ovn-accueil-corps{display:flex;align-items:flex-start;gap:14px}
+.ovn-accueil-corps > :first-child{flex:1;min-width:0}
+@media(max-width:620px){
+  .ovn-accueil-corps{flex-direction:column-reverse;align-items:stretch}
+  .ovn-accueil-duo{justify-content:flex-start}
+}
+
 .ovn-accueil{margin:0 0 14px;padding:12px 14px;border-left:4px solid #f59e0b;border-radius:8px;background:rgba(245,158,11,.10);color:var(--text,#dde3f0)}.ovn-accueil-novice{display:none}body.profile-novice .ovn-accueil-novice{display:block}.ovn-accueil-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}.ovn-accueil-lbl{font:700 12.5px/1.3 "DM Sans",system-ui,sans-serif;color:#fbbf24}.ovn-accueil-txt{margin:0;font:500 14.5px/1.55 "DM Sans",system-ui,sans-serif;max-width:80ch}.ovn-accueil-dest{margin:8px 0 0;padding-top:7px;border-top:1px dashed rgba(245,158,11,.4);font:500 12px/1.5 "DM Sans",system-ui,sans-serif;color:var(--text2,#8b99b8);max-width:80ch}.ovn-accueil-dest b{color:#fbbf24}.ovn-panel{margin:12px 0 4px;border:1px solid var(--border,#253047);border-radius:10px;background:var(--surface2,#1e2940);color:var(--text,#dde3f0)}.ovn-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;padding:10px 14px;cursor:pointer;list-style:none}.ovn-head::-webkit-details-marker{display:none}.ovn-head::before{content:"\25B8";color:#fbbf24;font-size:11px;transition:transform .15s}.ovn-panel[open]>.ovn-head::before{transform:rotate(90deg)}.ovn-title{font:700 14px/1.3 "DM Sans",system-ui,sans-serif;color:#fbbf24}.ovn-ctx{font:500 12px/1.3 "DM Sans",system-ui,sans-serif;color:var(--text2,#8b99b8)}.ovn-grp{margin:0 14px 8px}.ovn-grp-t{font:700 11.5px/1.3 "DM Sans",system-ui,sans-serif;color:var(--text2,#8b99b8);margin:6px 0 3px}.ovn-list{list-style:none;margin:0;padding:0}.ovn-li{display:flex;align-items:center;gap:8px;padding:3px 0}.ovn-li::before{content:"";flex:none;width:7px;height:7px;border-radius:50%;background:#6b7a99}.ovn-officiel::before{background:#34d399}.ovn-notice::before{background:#60a5fa}.ovn-video::before{background:#f87171}.ovn-images::before{background:#fbbf24}.ovn-a{flex:1;min-width:0;color:#fcd34d;font:500 13px/1.4 "DM Sans",system-ui,sans-serif;text-decoration:none;overflow-wrap:anywhere}.ovn-a:hover{text-decoration:underline}.ovn-a:focus-visible,.ovn-copy:focus-visible,.ovn-head:focus-visible{outline:2px solid #f59e0b;outline-offset:2px;border-radius:3px}.ovn-copy{flex:none;padding:2px 9px;border:1px solid var(--border2,#2e3a54);border-radius:6px;background:transparent;color:var(--text,#dde3f0);font:600 11px/1.6 "DM Sans",system-ui,sans-serif;cursor:pointer}.ovn-copy:hover{border-color:#f59e0b}.ovn-note{margin:4px 14px 10px;font:400 11px/1.4 "DM Sans",system-ui,sans-serif;color:var(--text2,#8b99b8)}.ovn-proc{margin:0 0 10px;padding:10px 12px;border-radius:8px;border:1px solid rgba(96,165,250,.35);background:rgba(59,130,246,.08)}.ovn-proc-t{font:700 13px/1.3 "DM Sans",system-ui,sans-serif;color:var(--text,#dde3f0);margin-bottom:6px}.ovn-proc-list{margin:0 0 0 20px;padding:0;font-size:13px;line-height:1.55;color:var(--text,#dde3f0)}.ovn-proc-list li{margin:2px 0}.ovn-proc-illu{margin-top:6px;font-size:12px;color:var(--text2,#8b99b8)}.ovn-proc-lbl{color:#93c5fd}.light .ovn-accueil{background:#fff4de;color:#1a2236}.light .ovn-accueil-lbl,.light .ovn-title{color:#8a4b00}.light .ovn-head::before{color:#8a4b00}.light .ovn-panel{background:#ffffff;color:#1a2236}.light .ovn-ctx,.light .ovn-grp-t,.light .ovn-note,.light .ovn-proc-illu{color:#4a5978}.light .ovn-a{color:#8a4b00}.light .ovn-copy{color:#1a2236}.light .ovn-proc{background:#eef4ff}.light .ovn-proc-t,.light .ovn-proc-list{color:#1a2236}.light .ovn-proc-lbl{color:#1d4ed8}@media print{.ovn-accueil,.ovn-copy{display:none!important}.ovn-panel{border-color:#999}.ovn-a{color:#000}}
 .profile-chip .pc-main{white-space:nowrap;}
 .profile-chip .pc-sub{display:block;font-size:9.5px;font-weight:600;opacity:.8;letter-spacing:.02em;}
@@ -32249,10 +32298,17 @@ body.acc-hors-accueil #accueilRetour{display:inline-flex;align-items:center;gap:
     return '<div class="ovn-accueil ovn-accueil-novice" role="note" aria-label="Phrase d\'accueil client">'
       + '<div class="ovn-accueil-top"><span class="ovn-accueil-lbl">📞 RCD / Hotline — phrase d\'accueil client, à lire en début d\'appel</span>'
       + '<button type="button" class="ovn-copy" data-ovn-copy-accueil="1">Copier</button></div>'
+      + '<div class="ovn-accueil-corps"><div>'
       + '<p class="ovn-accueil-txt">' + esc(OVPEM_PHRASE_ACCUEIL) + '</p>'
       + '<p class="ovn-accueil-dest">Destinée au <b>comptoir distant (RCD)</b> et à la hotline : '
       + 'elle prépare le client à un diagnostic par téléphone, avant tout dépôt en magasin. '
-      + 'Au comptoir, en face du client, passez directement au verbatim.</p></div>';
+      + 'Au comptoir, en face du client, passez directement au verbatim.</p></div>'
+      /* V3.44 — le robot salue le client, la machine rappelle l'appareil
+         qu'on va diagnostiquer : on voit tout de suite à quoi sert ce bloc. */
+      + '<div class="ovn-accueil-duo">'
+      + (typeof ovpemRobotSvg === 'function' ? ovpemRobotSvg('') : '')
+      + (typeof ovpemMachineSvg === 'function' ? ovpemMachineSvg() : '')
+      + '</div></div></div>';
   }
 
   function ovpemAccueilInstall() {
@@ -35108,6 +35164,88 @@ function renderProfileBadge(prof){
     sortie.innerHTML='<span aria-hidden="true">⏻</span> Déconnecter';
     if(chip.parentNode) chip.parentNode.insertBefore(sortie, chip.nextSibling);
   }
+  /* V3.44 — le robot d'accueil, juste en dessous. */
+  try{ ovpemRobotCoin(); }catch(e){ console.warn('[V3.44] robot', e); }
+}
+
+
+/* ═══════════ V3.44 — ROBOT D'ACCUEIL ═══════════ */
+
+/** Le robot, en SVG. `cls` permet d'ajouter une classe, `titre` donne le
+    texte lu par les lecteurs d'écran (vide = purement décoratif). */
+function ovpemRobotSvg(titre, cls){
+  var id = 'ovrb' + Math.random().toString(36).slice(2, 8);
+  var aria = titre ? ' role="img" aria-label="' + String(titre).replace(/"/g, '&quot;') + '"'
+                   : ' aria-hidden="true"';
+  return '<svg class="ovrb ' + (cls || '') + '" viewBox="0 0 120 130"' + aria + '>' +
+    '<defs>' +
+      '<linearGradient id="' + id + 'c" x1="0" y1="0" x2="0" y2="1">' +
+        '<stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#d7dbe4"/></linearGradient>' +
+      '<linearGradient id="' + id + 'v" x1="0" y1="0" x2="0" y2="1">' +
+        '<stop offset="0" stop-color="#1d2a45"/><stop offset="1" stop-color="#0c1322"/></linearGradient>' +
+      '<linearGradient id="' + id + 'a" x1="0" y1="0" x2="1" y2="1">' +
+        '<stop offset="0" stop-color="#e2e6ed"/><stop offset="1" stop-color="#c3c9d5"/></linearGradient>' +
+    '</defs>' +
+    '<g class="ovrb-corps">' +
+      /* antenne */
+      '<rect x="57" y="4" width="6" height="12" rx="3" fill="#c7ccd6"/>' +
+      '<circle cx="60" cy="5" r="4.6" fill="url(#' + id + 'c)" stroke="#c3c9d5" stroke-width="1.4"/>' +
+      /* bras : dessinés AVANT le buste, qui recouvre l'épaule et les rattache */
+      '<path d="M40 84c-9 2-16 11-19 22-2 9-1 16 2 17 4 1 9-6 12-16 3-9 5-17 5-23z" fill="url(#' + id + 'a)"/>' +
+      '<g class="ovrb-bras-d">' +
+        '<path d="M80 84c9 2 16 11 19 22 2 9 1 16-2 17-4 1-9-6-12-16-3-9-5-17-5-23z" fill="url(#' + id + 'a)"/>' +
+      '</g>' +
+      /* cou et buste */
+      '<rect x="53" y="66" width="14" height="12" rx="6" fill="#c7ccd6"/>' +
+      '<path d="M60 72c18 0 29 13 29 28s-13 24-29 24-29-9-29-24 11-28 29-28z" fill="url(#' + id + 'c)"/>' +
+      '<path d="M33 97c9-4 18-5 27-5s18 1 27 5" fill="none" stroke="#c2c7d2" stroke-width="2" stroke-linecap="round"/>' +
+      '<path d="M42 82c4-5 9-7 13-7 2 0 3 2 1 3-5 2-9 5-11 8-2 3-6 0-3-4z" fill="#ffffff" opacity=".6"/>' +
+      /* oreilles, tête, visière */
+      '<rect x="10" y="34" width="13" height="23" rx="6.5" fill="url(#' + id + 'a)"/>' +
+      '<rect x="97" y="34" width="13" height="23" rx="6.5" fill="url(#' + id + 'a)"/>' +
+      '<rect x="19" y="12" width="82" height="56" rx="22" fill="url(#' + id + 'c)"/>' +
+      '<rect x="28" y="20" width="64" height="40" rx="16" fill="url(#' + id + 'v)"/>' +
+      '<path d="M35 30c4-6 10-8 15-8 3 0 4 3 1 4-6 2-11 6-13 10-1 3-6 1-3-6z" fill="#ffffff" opacity=".14"/>' +
+      /* yeux et sourire */
+      '<path class="ovrb-oeil" d="M41 38a8 8 0 0 1 16 0z" fill="#38dde6"/>' +
+      '<path class="ovrb-oeil" d="M63 38a8 8 0 0 1 16 0z" fill="#38dde6"/>' +
+      '<path d="M52 47a8 8 0 0 0 16 0z" fill="#38dde6"/>' +
+    '</g></svg>';
+}
+
+/** Une machine à laver, pour accompagner le robot sur la phrase d'accueil. */
+function ovpemMachineSvg(){
+  var id = 'ovmc' + Math.random().toString(36).slice(2, 8);
+  return '<svg class="ovmc" viewBox="0 0 80 95" aria-hidden="true">' +
+    '<defs><linearGradient id="' + id + 'b" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#dce0e8"/></linearGradient></defs>' +
+    '<rect x="6" y="5" width="68" height="82" rx="11" fill="url(#' + id + 'b)" stroke="#c2c7d2" stroke-width="2"/>' +
+    '<rect x="14" y="13" width="52" height="13" rx="6.5" fill="#eef1f6"/>' +
+    '<circle cx="60" cy="19.5" r="3.4" fill="#38dde6"/>' +
+    '<circle cx="50" cy="19.5" r="3.4" fill="#c2c7d2"/>' +
+    '<circle cx="40" cy="56" r="23" fill="#eef1f6" stroke="#c2c7d2" stroke-width="2"/>' +
+    '<circle cx="40" cy="56" r="17" fill="#1d2a45"/>' +
+    '<g class="ovmc-hublot">' +
+      '<path d="M40 42a14 14 0 0 1 10 4" fill="none" stroke="#38dde6" stroke-width="3" stroke-linecap="round"/>' +
+      '<path d="M40 70a14 14 0 0 1-10-4" fill="none" stroke="#38dde6" stroke-width="3" stroke-linecap="round"/>' +
+    '</g>' +
+    '<rect x="12" y="87" width="10" height="6" rx="2.5" fill="#c2c7d2"/>' +
+    '<rect x="58" y="87" width="10" height="6" rx="2.5" fill="#c2c7d2"/>' +
+    '</svg>';
+}
+
+/** Le robot sous le bouton « Déconnecter ». */
+function ovpemRobotCoin(){
+  try{
+    var sortie = document.getElementById('profileLogout');
+    if(!sortie || document.getElementById('ovpemRobotCoin')) return;
+    var box = document.createElement('div');
+    box.id = 'ovpemRobotCoin';
+    box.className = 'ovrb-coin';
+    box.innerHTML = ovpemRobotSvg('Assistant OVPEM') +
+      '<span class="ovrb-coin-txt">Votre assistant<br>OVPEM</span>';
+    if(sortie.parentNode) sortie.parentNode.insertBefore(box, sortie.nextSibling);
+  }catch(e){ console.warn('[V3.44] robot', e); }
 }
 
 function lockProfile(){
